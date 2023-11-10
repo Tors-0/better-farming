@@ -14,6 +14,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -41,7 +42,8 @@ public class HoeItemMixin {
 				LootContext.Builder builder = new LootContext.Builder((ServerWorld) world)
 					.random(world.random)
 					.parameter(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
-					.parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(playerEntity.getActiveHand()));
+					.parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.MAIN_HAND))
+					.parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.OFF_HAND));
 				List<ItemStack> cropDrops = world.getBlockState(pos).getDroppedStacks(builder);
                 for (ItemStack i : cropDrops) {
                     if (!playerEntity.giveItemStack(i)) {
