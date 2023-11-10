@@ -1,9 +1,9 @@
-package raeeeee.dotwarden.registry;
+package io.github.Tors_0.raesbetterfarming.registry;
 
+import io.github.Tors_0.raesbetterfarming.RaesBetterFarming;
 import net.minecraft.item.Item;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
-import raeeeee.dotwarden.DOTWarden;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -14,7 +14,7 @@ public interface ModItems {
 	// Item NAME = createItem("name", new ModItem(new QuiltItemSettings()));
 
 	private static <T extends Item> T createItem(String name, T item) {
-		ITEMS.put(item, new Identifier(DOTWarden.ID, name));
+		ITEMS.put(item, new Identifier(RaesBetterFarming.ID, name));
 		return item;
 	}
 

@@ -2,22 +2,23 @@
 	"schema_version": 1,
 	"quilt_loader": {
 		"group": "io.github.Tors-0",
-		"id": "dotwarden",
+		"id": "raesbetterfarming",
 		"version": "${version}",
 		"metadata": {
-			"name": "Disciple of the Warden",
-			"description": "A short description of your mod.",
+			"name": "Rae's Better Farming",
+			"description": "Tweaks and updates to Minecraft's farming system",
 			"contributors": {
 				"Raeeeee": "Owner"
 			},
 			"contact": {
 				"sources": "https://github.com/Tors-0/dotwarden/tree/1.19.2"
 			},
-			"icon": "assets/dotwarden/icon.png"
+			"icon": "assets/raesbetterfarming/icon.png"
 		},
 		"intermediate_mappings": "net.fabricmc:intermediary",
 		"entrypoints": {
-			"init": "raeeeee.dotwarden.DOTWarden"
+			"init": "io.github.Tors_0.raesbetterfarming.RaesBetterFarming",
+			"client_init": "io.github.Tors_0.raesbetterfarming.RaesBetterFarmingClient"
 		},
 		"depends": [
 			{
@@ -34,5 +35,5 @@
 			}
 		]
 	},
-	"mixin": "dotwarden.mixins.json"
+	"mixin": "raesbetterfarming.mixins.json"
 }

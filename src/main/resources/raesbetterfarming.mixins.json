@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "io.github.Tors_0.raesbetterfarming.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "HoeItemMixin"
+  ],
+  "client": [
+    "TitleScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+	}
+}

@@ -1,6 +1,6 @@
-package raeeeee.dotwarden.mixin;
+package io.github.Tors_0.raesbetterfarming.mixin;
 
-import raeeeee.dotwarden.DOTWarden;
+import io.github.Tors_0.raesbetterfarming.RaesBetterFarming;
 import net.minecraft.client.gui.screen.TitleScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -11,6 +11,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class TitleScreenMixin {
 	@Inject(method = "init", at = @At("TAIL"))
 	public void dotwarden$onInit(CallbackInfo ci) {
-		DOTWarden.LOGGER.info("This line is printed by an example mod mixin!");
+		RaesBetterFarming.LOGGER.info("Now with better farming!");
 	}
 }

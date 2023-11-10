@@ -1,5 +1,5 @@
-# Disciple of the Warden
-A mod that aims to add items/gear to allow you to play a sculk-based summoner playstyle.
+# Rae's Better Farming
+Tweaks and updates to Minecraft's farming system
 
 # Credits
 [Raeeeee](https://github.com/Tors-0) - Owner
