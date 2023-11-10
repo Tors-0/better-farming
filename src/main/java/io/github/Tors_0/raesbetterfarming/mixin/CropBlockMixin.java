@@ -13,6 +13,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import static io.github.Tors_0.raesbetterfarming.RaesBetterFarming.LOGGER;
+
 @Mixin(CropBlock.class)
 public abstract class CropBlockMixin {
 	@Shadow
@@ -26,7 +28,7 @@ public abstract class CropBlockMixin {
 
 	@Inject(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/random/RandomGenerator;nextInt(I)I"), locals = LocalCapture.CAPTURE_FAILSOFT)
 	public void raesfarming$randomTick(BlockState state, ServerWorld world, BlockPos pos, RandomGenerator random, CallbackInfo ci, int i, float f) {
-		if (f >= 1 && i < this.getMaxAge()-1) {
+		if (f >= 3.5 && i < this.getMaxAge()-1 && Math.random()/3 > (1f/f)) {
 			this.applyGrowth(world,pos,state);
 		}
 	}
