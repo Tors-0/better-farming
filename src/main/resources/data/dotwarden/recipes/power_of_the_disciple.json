@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smithing",
+  "base": {
+    "item": "dotwarden:corrupted_heart"
+  },
+  "addition": {
+    "item": "minecraft:bundle"
+  },
+  "result": {
+    "item": "dotwarden:power_of_the_disciple"
+  }
+}

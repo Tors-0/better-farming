@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smithing",
+  "base": {
+    "item": "minecraft:diamond_leggings"
+  },
+  "addition": {
+    "item": "dotwarden:sculk_core"
+  },
+  "result": {
+    "item": "dotwarden:disciple_leggings"
+  }
+}

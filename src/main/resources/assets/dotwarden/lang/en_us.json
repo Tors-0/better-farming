@@ -1,0 +1,35 @@
+{
+  "item.dotwarden.power_of_the_disciple": "Power of the Disciple",
+  "item.dotwarden.power_of_the_disciple.tooltip": "Power",
+  "item.dotwarden.power_of_the_disciple.tooltip1": "Progress",
+
+  "item.dotwarden.sculked_knife": "Sacrificial Sword",
+  "item.dotwarden.sculked_knife.tooltip": "Damage: ",
+  "item.dotwarden.power_of_the_disciple.tooltip2": "'s Heart",
+
+  "item.dotwarden.corrupted_heart": "Corrupted Heart",
+
+  "item.dotwarden.sculk_core": "Sculk Core",
+
+  "item.dotwarden.captured_soul": "Captured Soul",
+  "item.dotwarden.captured_soul.tooltip": "A Soul taken from the Warden's ribcage...",
+
+  "item.dotwarden.echo_chamber": "Echo Chamber",
+
+  "item.dotwarden.harmonic_staff": "Harmonic Staff",
+
+  "item.dotwarden.seismic_horn": "Seismic Horn",
+
+
+  "item.dotwarden.disciple_boots": "Disciple's Boots",
+  "item.dotwarden.disciple_leggings": "Disciple's Pants",
+  "item.dotwarden.disciple_chestplate": "Disciple's Cloak",
+  "item.dotwarden.disciple_helmet": "Disciple's Hood",
+
+
+  "death.attack.heartstab": "%1$s cut their own heart out",
+
+  "death.attack.seismic_shout": "%1$s was obliterated by a seismic shout",
+  "death.attack.seismic_shout.player": "%1$s was obliterated by a seismic shout from %2$s",
+  "death.attack.seismic_shout.player.item": "%1$s was obliterated by a seismic shout from %2$s using %3$s"
+}

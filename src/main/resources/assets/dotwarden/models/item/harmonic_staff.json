@@ -1,0 +1,14 @@
+{
+  "parent": "item/handheld",
+  "base": {
+    "parent": "dotwarden:item/harmonic_staff_handheld"
+  },
+  "perspectives": {
+    "gui": {
+      "parent": "dotwarden:item/harmonic_staff_gui"
+    },
+    "fixed": {
+      "parent": "dotwarden:item/harmonic_staff_gui"
+    }
+  }
+}
