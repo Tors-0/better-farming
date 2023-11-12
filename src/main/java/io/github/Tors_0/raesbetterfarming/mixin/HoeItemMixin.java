@@ -1,18 +1,17 @@
 package io.github.Tors_0.raesbetterfarming.mixin;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.CropBlock;
+import net.minecraft.block.*;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.HoeItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
+import net.minecraft.item.Items;
 import net.minecraft.loot.context.LootContext;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.tag.BlockTags;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
@@ -31,8 +30,8 @@ import static io.github.Tors_0.raesbetterfarming.networking.RBFNetworking.HARVES
 
 @Mixin(HoeItem.class)
 public class HoeItemMixin {
-	@Inject(method = "useOnBlock", at = @At(value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;"), cancellable = true)
-	public void raesfarming$useOnBlock(ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
+	@Inject(method = "useOnBlock", at = @At(value = "HEAD"), cancellable = true)
+	public void raes_farming$useOnBlock(ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
 		World world = context.getWorld();
 		if (!world.isClient()) {
 			PlayerEntity playerEntity = context.getPlayer();
@@ -54,10 +53,53 @@ public class HoeItemMixin {
                 PacketByteBuf buf = PacketByteBufs.create();
                 buf.writeBlockPos(pos);
                 ServerPlayNetworking.send((ServerPlayerEntity) playerEntity,HARVEST_PACKET_ID,buf);
-                world.playSound(playerEntity,pos,SoundEvents.BLOCK_CROP_BREAK,SoundCategory.BLOCKS,1f,1f);
 				world.setBlockState(pos, crop.getDefaultState());
+                context.getStack().damage(1, playerEntity, (p) -> {
+                    p.sendToolBreakStatus(context.getHand());
+                });
 				cir.setReturnValue(ActionResult.SUCCESS);
-			}
-		}
+			} else if (block instanceof SugarCaneBlock sugarCane && playerEntity != null) {
+                if (!(world.getBlockState(pos.down()).getBlock() instanceof SugarCaneBlock)) {
+                    pos = pos.up();
+                    if (!(world.getBlockState(pos.up()).getBlock() instanceof SugarCaneBlock)) {
+                        cir.setReturnValue(ActionResult.FAIL);
+                    }
+                }
+                short countCanes = 0;
+                while (world.getBlockState(pos.up(countCanes)).getBlock() instanceof SugarCaneBlock) {
+                    world.breakBlock(pos.up(countCanes),false);
+                    countCanes++;
+                }
+                ItemStack i = new ItemStack(Items.SUGAR_CANE,countCanes);
+                if (!playerEntity.giveItemStack(i)) {
+                    playerEntity.dropStack(i);
+                }
+                context.getStack().damage(1, playerEntity, (p) -> {
+                    p.sendToolBreakStatus(context.getHand());
+                });
+                cir.setReturnValue(ActionResult.SUCCESS);
+            } else if (block instanceof CocoaBlock cocoa && playerEntity != null && (Integer) world.getBlockState(pos).get(CocoaBlock.AGE) == 2) {
+                LootContext.Builder builder = new LootContext.Builder((ServerWorld) world)
+                        .random(world.random)
+                        .parameter(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
+                        .parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.MAIN_HAND))
+                        .parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.OFF_HAND));
+                List<ItemStack> cocoaDrops = world.getBlockState(pos).getDroppedStacks(builder);
+                for (ItemStack i : cocoaDrops) {
+                    if (!playerEntity.giveItemStack(i)) {
+                        playerEntity.dropStack(i);
+                    }
+                }
+                playerEntity.getInventory().removeOne(new ItemStack(Items.COCOA_BEANS));
+                PacketByteBuf buf = PacketByteBufs.create();
+                buf.writeBlockPos(pos);
+                ServerPlayNetworking.send((ServerPlayerEntity) playerEntity,HARVEST_PACKET_ID,buf);
+                world.setBlockState(pos, world.getBlockState(pos).with(CocoaBlock.AGE,0),2);
+                context.getStack().damage(1, playerEntity, (p) -> {
+                    p.sendToolBreakStatus(context.getHand());
+                });
+                cir.setReturnValue(ActionResult.SUCCESS);
+            }
+        }
 	}
 }
