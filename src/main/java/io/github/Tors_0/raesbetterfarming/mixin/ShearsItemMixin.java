@@ -27,7 +27,7 @@ public class ShearsItemMixin {
             BlockPos pos = context.getBlockPos();
             Block block = world.getBlockState(pos).getBlock();
 
-            if ((block instanceof VineBlock vines ^ block instanceof WeepingVinesPlantBlock) && (playerEntity != null)) {
+            if ((block instanceof VineBlock || block instanceof WeepingVinesPlantBlock) && (playerEntity != null)) {
                 if (!(world.getBlockState(pos.up()).getBlock() instanceof VineBlock || world.getBlockState(pos.up()).getBlock() instanceof WeepingVinesPlantBlock)) {
                     pos = pos.down();
                     if (!(world.getBlockState(pos.down()).getBlock() instanceof VineBlock || world.getBlockState(pos.down()).getBlock() instanceof WeepingVinesPlantBlock)) {
@@ -50,7 +50,7 @@ public class ShearsItemMixin {
                     p.sendToolBreakStatus(context.getHand());
                 });
                 cir.setReturnValue(ActionResult.SUCCESS);
-            } else if (block instanceof TwistingVinesPlantBlock vine && playerEntity != null) {
+            } else if (block instanceof TwistingVinesPlantBlock && playerEntity != null) {
                 if (!(world.getBlockState(pos.down()).getBlock() instanceof TwistingVinesPlantBlock)) {
                     pos = pos.up();
                     if (!(world.getBlockState(pos.up()).getBlock() instanceof TwistingVinesPlantBlock)) {

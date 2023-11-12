@@ -60,7 +60,7 @@ public class HoeItemMixin {
                     p.sendToolBreakStatus(context.getHand());
                 });
 				cir.setReturnValue(ActionResult.SUCCESS);
-			} else if (block instanceof SugarCaneBlock sugarCane && playerEntity != null) {
+			} else if (block instanceof SugarCaneBlock && playerEntity != null) {
                 if (!(world.getBlockState(pos.down()).getBlock() instanceof SugarCaneBlock)) {
                     pos = pos.up();
                     if (!(world.getBlockState(pos.up()).getBlock() instanceof SugarCaneBlock)) {
@@ -80,7 +80,7 @@ public class HoeItemMixin {
                     p.sendToolBreakStatus(context.getHand());
                 });
                 cir.setReturnValue(ActionResult.SUCCESS);
-            } else if (block instanceof CocoaBlock cocoa && playerEntity != null && (Integer) world.getBlockState(pos).get(CocoaBlock.AGE) == 2) {
+            } else if (block instanceof CocoaBlock && playerEntity != null && world.getBlockState(pos).get(CocoaBlock.AGE) == 2) {
                 LootContext.Builder builder = new LootContext.Builder((ServerWorld) world)
                         .random(world.random)
                         .parameter(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
