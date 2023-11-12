@@ -1,3 +1,4 @@
+<img src="icon.png" width=20% height=20%></img>
 # Rae's Better Farming
 Tweaks and updates to Minecraft's farming system are as follows:
 ### Any Hoe can be used to right-click harvest:
