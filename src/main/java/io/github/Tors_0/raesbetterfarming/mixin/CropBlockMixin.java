@@ -13,17 +13,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import static io.github.Tors_0.raesbetterfarming.RaesBetterFarming.LOGGER;
-
 @Mixin(CropBlock.class)
 public abstract class CropBlockMixin {
 	@Shadow
 	public abstract int getMaxAge();
 
-	@Shadow
-	public abstract BlockState withAge(int age);
-
-	@Shadow
+    @Shadow
 	public abstract void applyGrowth(World world, BlockPos pos, BlockState state);
 
 	@Inject(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/random/RandomGenerator;nextInt(I)I"), locals = LocalCapture.CAPTURE_FAILSOFT)
