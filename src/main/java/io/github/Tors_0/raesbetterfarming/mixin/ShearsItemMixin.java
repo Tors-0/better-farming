@@ -37,7 +37,7 @@ public class ShearsItemMixin {
             BlockPos pos = context.getBlockPos();
             Block block = world.getBlockState(pos).getBlock();
 
-            if ((block instanceof VineBlock vine ^ block instanceof WeepingVinesPlantBlock vine) && playerEntity != null) {
+            if ((block instanceof VineBlock vines ^ block instanceof WeepingVinesPlantBlock) && (playerEntity != null)) {
                 if (!(world.getBlockState(pos.up()).getBlock() instanceof VineBlock || world.getBlockState(pos.up()).getBlock() instanceof WeepingVinesPlantBlock)) {
                     pos = pos.down();
                     if (!(world.getBlockState(pos.down()).getBlock() instanceof VineBlock || world.getBlockState(pos.down()).getBlock() instanceof WeepingVinesPlantBlock)) {
@@ -51,7 +51,8 @@ public class ShearsItemMixin {
                 }
                 world.breakBlock(pos.down(countVines),false,playerEntity,1);
                 countVines++;
-                ItemStack i = new ItemStack(Items.VINE,countVines);
+
+                ItemStack i = new ItemStack(block instanceof VineBlock ? Items.VINE : Items.WEEPING_VINES, countVines);
                 if (!playerEntity.giveItemStack(i)) {
                     playerEntity.dropStack(i);
                 }
@@ -73,7 +74,7 @@ public class ShearsItemMixin {
                 }
                 world.breakBlock(pos.up(countVines),false,playerEntity,1);
                 countVines++;
-                ItemStack i = new ItemStack(Items.VINE,countVines);
+                ItemStack i = new ItemStack(Items.TWISTING_VINES,countVines);
                 if (!playerEntity.giveItemStack(i)) {
                     playerEntity.dropStack(i);
                 }
