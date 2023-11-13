@@ -1,9 +1,6 @@
 package io.github.Tors_0.raesbetterfarming.mixin;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.CocoaBlock;
-import net.minecraft.block.CropBlock;
-import net.minecraft.block.SugarCaneBlock;
+import net.minecraft.block.*;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.HoeItem;
 import net.minecraft.item.ItemStack;
@@ -97,6 +94,27 @@ public class HoeItemMixin {
                 buf.writeBlockPos(pos);
                 ServerPlayNetworking.send((ServerPlayerEntity) playerEntity,HARVEST_PACKET_ID,buf);
                 world.setBlockState(pos, world.getBlockState(pos).with(CocoaBlock.AGE,0),2);
+                context.getStack().damage(1, playerEntity, (p) -> {
+                    p.sendToolBreakStatus(context.getHand());
+                });
+                cir.setReturnValue(ActionResult.SUCCESS);
+            } else if (block instanceof NetherWartBlock && playerEntity != null && world.getBlockState(pos).get(NetherWartBlock.AGE) == NetherWartBlock.MAX_AGE) {
+                LootContext.Builder builder = new LootContext.Builder((ServerWorld) world)
+                        .random(world.random)
+                        .parameter(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
+                        .parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.MAIN_HAND))
+                        .parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.OFF_HAND));
+                List<ItemStack> wartDrops = world.getBlockState(pos).getDroppedStacks(builder);
+                for (ItemStack i : wartDrops) {
+                    if (!playerEntity.giveItemStack(i)) {
+                        playerEntity.dropStack(i);
+                    }
+                }
+                playerEntity.getInventory().removeOne(new ItemStack(Items.NETHER_WART));
+                PacketByteBuf buf = PacketByteBufs.create();
+                buf.writeBlockPos(pos);
+                ServerPlayNetworking.send((ServerPlayerEntity) playerEntity,HARVEST_PACKET_ID,buf);
+                world.setBlockState(pos, world.getBlockState(pos).with(NetherWartBlock.AGE,0),2);
                 context.getStack().damage(1, playerEntity, (p) -> {
                     p.sendToolBreakStatus(context.getHand());
                 });

@@ -5,6 +5,7 @@ Tweaks and updates to Minecraft's farming system are as follows:
 - Wheat, Carrots, Potatoes, Beetroot (and most modded crops)
 - Sugar Cane
 - Cocoa Beans
+- Nether Wart
 ### Shears can be used to right-click harvest:
 - Vines, Twisting Vines, Weeping Vines
 ### Crops on well hydrated farmland grow faster
