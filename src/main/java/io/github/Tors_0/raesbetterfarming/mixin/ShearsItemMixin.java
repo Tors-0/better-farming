@@ -27,22 +27,22 @@ public class ShearsItemMixin {
             BlockPos pos = context.getBlockPos();
             Block block = world.getBlockState(pos).getBlock();
 
-            if ((block instanceof VineBlock || block instanceof WeepingVinesPlantBlock) && (playerEntity != null)) {
-                if (!(world.getBlockState(pos.up()).getBlock() instanceof VineBlock || world.getBlockState(pos.up()).getBlock() instanceof WeepingVinesPlantBlock)) {
+            if ((block instanceof WeepingVinesPlantBlock) && (playerEntity != null)) {
+                if (!(world.getBlockState(pos.up()).getBlock() instanceof WeepingVinesPlantBlock)) {
                     pos = pos.down();
-                    if (!(world.getBlockState(pos.down()).getBlock() instanceof VineBlock || world.getBlockState(pos.down()).getBlock() instanceof WeepingVinesPlantBlock)) {
+                    if (!(world.getBlockState(pos.down()).getBlock() instanceof WeepingVinesPlantBlock)) {
                         cir.setReturnValue(ActionResult.FAIL);
                     }
                 }
                 short countVines = 0;
-                while (world.getBlockState(pos.down(countVines)).getBlock() instanceof VineBlock || world.getBlockState(pos.down(countVines)).getBlock() instanceof WeepingVinesPlantBlock) {
+                while (world.getBlockState(pos.down(countVines)).getBlock() instanceof WeepingVinesPlantBlock) {
                     world.breakBlock(pos.down(countVines),false,playerEntity,1);
                     countVines++;
                 }
                 world.breakBlock(pos.down(countVines),false,playerEntity,1);
                 countVines++;
 
-                ItemStack i = new ItemStack(block instanceof VineBlock ? Items.VINE : Items.WEEPING_VINES, countVines);
+                ItemStack i = new ItemStack(Items.WEEPING_VINES, countVines);
                 if (!playerEntity.giveItemStack(i)) {
                     playerEntity.dropStack(i);
                 }
@@ -65,6 +65,26 @@ public class ShearsItemMixin {
                 world.breakBlock(pos.up(countVines),false,playerEntity,1);
                 countVines++;
                 ItemStack i = new ItemStack(Items.TWISTING_VINES,countVines);
+                if (!playerEntity.giveItemStack(i)) {
+                    playerEntity.dropStack(i);
+                }
+                context.getStack().damage(1, playerEntity, (p) -> {
+                    p.sendToolBreakStatus(context.getHand());
+                });
+                cir.setReturnValue(ActionResult.SUCCESS);
+            } else if (block instanceof VineBlock && playerEntity != null) {
+                if (!(world.getBlockState(pos.up()).getBlock() instanceof VineBlock)) {
+                    pos = pos.down();
+                    if (!(world.getBlockState(pos.down()).getBlock() instanceof VineBlock)) {
+                        cir.setReturnValue(ActionResult.FAIL);
+                    }
+                }
+                short countVines = 0;
+                while (world.getBlockState(pos.down(countVines)).getBlock() instanceof VineBlock) {
+                    world.breakBlock(pos.down(countVines),false,playerEntity,0);
+                    countVines++;
+                }
+                ItemStack i = new ItemStack(Items.VINE,countVines);
                 if (!playerEntity.giveItemStack(i)) {
                     playerEntity.dropStack(i);
                 }

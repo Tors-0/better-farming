@@ -7,6 +7,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
 import net.minecraft.item.Items;
 import net.minecraft.loot.context.LootContext;
+import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -37,11 +38,10 @@ public class HoeItemMixin {
 			BlockPos pos = context.getBlockPos();
 			Block block = world.getBlockState(pos).getBlock();
 			if (block instanceof CropBlock crop && crop.isMature(world.getBlockState(pos)) && playerEntity != null) {
-				LootContext.Builder builder = new LootContext.Builder((ServerWorld) world)
-					.random(world.random)
-					.parameter(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
-					.parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.MAIN_HAND))
-					.parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.OFF_HAND));
+                LootContextParameterSet.Builder builder = new LootContextParameterSet.Builder((ServerWorld) world)
+                        .add(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
+                        .add(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.MAIN_HAND))
+                        .add(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.OFF_HAND));
 				List<ItemStack> cropDrops = world.getBlockState(pos).getDroppedStacks(builder);
                 for (ItemStack i : cropDrops) {
                     if (!playerEntity.giveItemStack(i)) {
@@ -78,11 +78,10 @@ public class HoeItemMixin {
                 });
                 cir.setReturnValue(ActionResult.SUCCESS);
             } else if (block instanceof CocoaBlock && playerEntity != null && world.getBlockState(pos).get(CocoaBlock.AGE) == 2) {
-                LootContext.Builder builder = new LootContext.Builder((ServerWorld) world)
-                        .random(world.random)
-                        .parameter(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
-                        .parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.MAIN_HAND))
-                        .parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.OFF_HAND));
+                LootContextParameterSet.Builder builder = new LootContextParameterSet.Builder((ServerWorld) world)
+                        .add(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
+                        .add(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.MAIN_HAND))
+                        .add(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.OFF_HAND));
                 List<ItemStack> cocoaDrops = world.getBlockState(pos).getDroppedStacks(builder);
                 for (ItemStack i : cocoaDrops) {
                     if (!playerEntity.giveItemStack(i)) {
@@ -99,11 +98,10 @@ public class HoeItemMixin {
                 });
                 cir.setReturnValue(ActionResult.SUCCESS);
             } else if (block instanceof NetherWartBlock && playerEntity != null && world.getBlockState(pos).get(NetherWartBlock.AGE) == NetherWartBlock.MAX_AGE) {
-                LootContext.Builder builder = new LootContext.Builder((ServerWorld) world)
-                        .random(world.random)
-                        .parameter(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
-                        .parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.MAIN_HAND))
-                        .parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.OFF_HAND));
+                LootContextParameterSet.Builder builder = new LootContextParameterSet.Builder((ServerWorld) world)
+                        .add(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
+                        .add(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.MAIN_HAND))
+                        .add(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.OFF_HAND));
                 List<ItemStack> wartDrops = world.getBlockState(pos).getDroppedStacks(builder);
                 for (ItemStack i : wartDrops) {
                     if (!playerEntity.giveItemStack(i)) {

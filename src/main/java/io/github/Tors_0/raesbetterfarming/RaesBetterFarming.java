@@ -4,7 +4,6 @@ import org.quiltmc.loader.api.ModContainer;
 import org.quiltmc.qsl.base.api.entrypoint.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import io.github.Tors_0.raesbetterfarming.registry.ModItems;
 
 public class RaesBetterFarming implements ModInitializer {
 	public static final String ID = "raesbetterfarming";
@@ -16,7 +15,5 @@ public class RaesBetterFarming implements ModInitializer {
 	@Override
 	public void onInitialize(ModContainer mod) {
 		LOGGER.info("Now initializing {} version {}", mod.metadata().name(), mod.metadata().version());
-
-		ModItems.init();
 	}
 }
