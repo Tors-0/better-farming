@@ -24,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import static io.github.Tors_0.raesbetterfarming.networking.RBFNetworking.HARVEST_PACKET_ID;
 
@@ -33,7 +34,7 @@ public class HoeItemMixin {
 	public void raes_farming$useOnBlock(ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
 		World world = context.getWorld();
 		if (!world.isClient()) {
-			PlayerEntity playerEntity = context.getPlayer();
+			ServerPlayerEntity playerEntity = (ServerPlayerEntity) context.getPlayer();
 			BlockPos pos = context.getBlockPos();
 			Block block = world.getBlockState(pos).getBlock();
 			if (block instanceof CropBlock crop && crop.isMature(world.getBlockState(pos)) && playerEntity != null) {
@@ -48,11 +49,15 @@ public class HoeItemMixin {
                         playerEntity.dropStack(i);
                     }
                 }
-                playerEntity.getInventory().removeOne(crop.getPickStack(world,pos,world.getBlockState(pos)));
+                BlockPos finalPos1 = pos;
+                if (1 == playerEntity.getInventory().remove(itemStack -> itemStack.isOf((crop.getPickStack(world, finalPos1, world.getBlockState(finalPos1))).getItem()), 1, playerEntity.getInventory())) {
+                    world.setBlockState(pos, crop.getDefaultState());
+                } else {
+                    world.setBlockState(pos, Blocks.AIR.getDefaultState());
+                }
                 PacketByteBuf buf = PacketByteBufs.create();
                 buf.writeBlockPos(pos);
-                ServerPlayNetworking.send((ServerPlayerEntity) playerEntity,HARVEST_PACKET_ID,buf);
-				world.setBlockState(pos, crop.getDefaultState());
+                ServerPlayNetworking.send(playerEntity,HARVEST_PACKET_ID,buf);
                 context.getStack().damage(1, playerEntity, (p) -> {
                     p.sendToolBreakStatus(context.getHand());
                 });
@@ -77,7 +82,7 @@ public class HoeItemMixin {
                     p.sendToolBreakStatus(context.getHand());
                 });
                 cir.setReturnValue(ActionResult.SUCCESS);
-            } else if (block instanceof CocoaBlock && playerEntity != null && world.getBlockState(pos).get(CocoaBlock.AGE) == 2) {
+            } else if (block instanceof CocoaBlock cocoa && playerEntity != null && world.getBlockState(pos).get(CocoaBlock.AGE) == 2) {
                 LootContext.Builder builder = new LootContext.Builder((ServerWorld) world)
                         .random(world.random)
                         .parameter(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
@@ -89,16 +94,20 @@ public class HoeItemMixin {
                         playerEntity.dropStack(i);
                     }
                 }
-                playerEntity.getInventory().removeOne(new ItemStack(Items.COCOA_BEANS));
+                if (1 == playerEntity.getInventory().remove(itemStack -> itemStack.isOf(Items.COCOA_BEANS), 1, playerEntity.getInventory())) {
+                    world.setBlockState(pos, cocoa.getDefaultState());
+                } else {
+                    world.setBlockState(pos, Blocks.AIR.getDefaultState());
+                }
                 PacketByteBuf buf = PacketByteBufs.create();
                 buf.writeBlockPos(pos);
-                ServerPlayNetworking.send((ServerPlayerEntity) playerEntity,HARVEST_PACKET_ID,buf);
+                ServerPlayNetworking.send(playerEntity,HARVEST_PACKET_ID,buf);
                 world.setBlockState(pos, world.getBlockState(pos).with(CocoaBlock.AGE,0),2);
                 context.getStack().damage(1, playerEntity, (p) -> {
                     p.sendToolBreakStatus(context.getHand());
                 });
                 cir.setReturnValue(ActionResult.SUCCESS);
-            } else if (block instanceof NetherWartBlock && playerEntity != null && world.getBlockState(pos).get(NetherWartBlock.AGE) == NetherWartBlock.MAX_AGE) {
+            } else if (block instanceof NetherWartBlock netherWart && playerEntity != null && world.getBlockState(pos).get(NetherWartBlock.AGE) == NetherWartBlock.MAX_AGE) {
                 LootContext.Builder builder = new LootContext.Builder((ServerWorld) world)
                         .random(world.random)
                         .parameter(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
@@ -110,10 +119,14 @@ public class HoeItemMixin {
                         playerEntity.dropStack(i);
                     }
                 }
-                playerEntity.getInventory().removeOne(new ItemStack(Items.NETHER_WART));
+                if (1 == playerEntity.getInventory().remove(itemStack -> itemStack.isOf(Items.NETHER_WART), 1, playerEntity.getInventory())) {
+                    world.setBlockState(pos, netherWart.getDefaultState());
+                } else {
+                    world.setBlockState(pos, Blocks.AIR.getDefaultState());
+                }
                 PacketByteBuf buf = PacketByteBufs.create();
                 buf.writeBlockPos(pos);
-                ServerPlayNetworking.send((ServerPlayerEntity) playerEntity,HARVEST_PACKET_ID,buf);
+                ServerPlayNetworking.send(playerEntity,HARVEST_PACKET_ID,buf);
                 world.setBlockState(pos, world.getBlockState(pos).with(NetherWartBlock.AGE,0),2);
                 context.getStack().damage(1, playerEntity, (p) -> {
                     p.sendToolBreakStatus(context.getHand());
