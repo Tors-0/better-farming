@@ -1,6 +1,6 @@
 {
   "parent": "item/handheld",
   "textures": {
-    "layer0": "raesbetterfarming:item/wooden_scythe"
+    "layer0": "raesbetterfarming:item/golden_sickle"
   }
 }

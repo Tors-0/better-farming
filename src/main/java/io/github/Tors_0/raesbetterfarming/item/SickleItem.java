@@ -10,7 +10,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.mojang.datafixers.util.Pair;
-import io.github.Tors_0.raesbetterfarming.modifier.ModifiableItemUsageContext;
 import net.minecraft.block.*;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
@@ -31,8 +30,8 @@ import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.TagKey;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
@@ -47,15 +46,15 @@ import java.util.function.Predicate;
 
 import static io.github.Tors_0.raesbetterfarming.networking.RBFNetworking.HARVEST_PACKET_ID;
 
-public class ScytheItem extends ToolItem implements Vanishable {
+public class SickleItem extends SwordItem implements Vanishable {
     private final TagKey<Block> effectiveBlocks;
     protected final float miningSpeed;
     private final float attackDamage;
     private final Multimap<EntityAttribute, EntityAttributeModifier> attributeModifiers;
     protected static final Map<Block, Pair<Predicate<ItemUsageContext>, Consumer<ItemUsageContext>>> TILLING_ACTIONS;
 
-    public ScytheItem(float toolBaseDamage, float attackSpeed, ToolMaterial material, Item.Settings settings) {
-        super(material, settings);
+    public SickleItem(float toolBaseDamage, float attackSpeed, ToolMaterial material, Item.Settings settings) {
+        super(material, (int) toolBaseDamage, attackSpeed, settings);
         this.effectiveBlocks = BlockTags.HOE_MINEABLE;
         this.miningSpeed = material.getMiningSpeedMultiplier();
         this.attackDamage = toolBaseDamage + material.getAttackDamage();
@@ -64,29 +63,29 @@ public class ScytheItem extends ToolItem implements Vanishable {
         builder.put(EntityAttributes.GENERIC_ATTACK_SPEED, new EntityAttributeModifier(ATTACK_SPEED_MODIFIER_ID, "Tool modifier", (double)attackSpeed, Operation.ADDITION));
         this.attributeModifiers = builder.build();
     }
-
+// add a tooltip saying "innate sweeping damage" or smth
     public ActionResult useOnBlock(ItemUsageContext context) {
         World world = context.getWorld();
         BlockPos blockPos = context.getBlockPos();
-        ActionResult letsHarvest = blockHarvest(context, blockPos);
-        blockHarvest(context, blockPos.north());
-        blockHarvest(context, blockPos.east());
-        blockHarvest(context, blockPos.south());
-        blockHarvest(context, blockPos.west());
-        if (letsHarvest != null) {
-            return letsHarvest;
-        }
         Pair<Predicate<ItemUsageContext>, Consumer<ItemUsageContext>> pair = (Pair) TILLING_ACTIONS.get(world.getBlockState(blockPos).getBlock());
         if (pair == null) {
+            ActionResult letsHarvest = blockHarvest(context, blockPos);
+            blockHarvest(context, blockPos.north());
+            blockHarvest(context, blockPos.east());
+            blockHarvest(context, blockPos.south());
+            blockHarvest(context, blockPos.west());
+            if (letsHarvest != null) {
+                return letsHarvest;
+            }
             return ActionResult.PASS;
         } else {
             Predicate<ItemUsageContext> predicate = (Predicate) pair.getFirst();
             Consumer<ItemUsageContext> consumer = (Consumer) pair.getSecond();
             // tills blocks in a plus shape (same as harvesting)
-            tillBlock(new ModifiableItemUsageContext(context,blockPos.north()));
-            tillBlock(new ModifiableItemUsageContext(context,blockPos.east()));
-            tillBlock(new ModifiableItemUsageContext(context,blockPos.south()));
-            tillBlock(new ModifiableItemUsageContext(context,blockPos.west()));
+            tillBlock(new ItemUsageContext(context.getPlayer(),context.getHand(),new BlockHitResult(context.getHitPos(),context.getSide(),blockPos.north(),context.hitsInsideBlock())));
+            tillBlock(new ItemUsageContext(context.getPlayer(),context.getHand(),new BlockHitResult(context.getHitPos(),context.getSide(),blockPos.east(),context.hitsInsideBlock())));
+            tillBlock(new ItemUsageContext(context.getPlayer(),context.getHand(),new BlockHitResult(context.getHitPos(),context.getSide(),blockPos.south(),context.hitsInsideBlock())));
+            tillBlock(new ItemUsageContext(context.getPlayer(),context.getHand(),new BlockHitResult(context.getHitPos(),context.getSide(),blockPos.west(),context.hitsInsideBlock())));
             if (predicate.test(context)) {
                 PlayerEntity playerEntity = context.getPlayer();
                 world.playSound(playerEntity, blockPos, SoundEvents.ITEM_HOE_TILL, SoundCategory.BLOCKS, 1.0F, 1.0F);
