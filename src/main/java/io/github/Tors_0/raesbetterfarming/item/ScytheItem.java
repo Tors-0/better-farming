@@ -10,9 +10,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.mojang.datafixers.util.Pair;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import net.minecraft.block.*;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
@@ -21,19 +19,32 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.attribute.EntityAttributeModifier.Operation;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
+import net.minecraft.loot.context.LootContext;
+import net.minecraft.loot.context.LootContextParameters;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.TagKey;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
+import org.quiltmc.qsl.networking.api.PacketByteBufs;
+import org.quiltmc.qsl.networking.api.PlayerLookup;
+import org.quiltmc.qsl.networking.api.ServerPlayNetworking;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+
+import static io.github.Tors_0.raesbetterfarming.networking.RBFNetworking.HARVEST_PACKET_ID;
 
 public class ScytheItem extends ToolItem implements Vanishable {
     private final TagKey<Block> effectiveBlocks;
@@ -56,12 +67,25 @@ public class ScytheItem extends ToolItem implements Vanishable {
     public ActionResult useOnBlock(ItemUsageContext context) {
         World world = context.getWorld();
         BlockPos blockPos = context.getBlockPos();
-        Pair<Predicate<ItemUsageContext>, Consumer<ItemUsageContext>> pair = (Pair)TILLING_ACTIONS.get(world.getBlockState(blockPos).getBlock());
+        ActionResult letsHarvest = blockHarvest(context, blockPos);
+        blockHarvest(context, blockPos.north());
+        blockHarvest(context, blockPos.east());
+        blockHarvest(context, blockPos.south());
+        blockHarvest(context, blockPos.west());
+        if (letsHarvest != null) {
+            return letsHarvest;
+        }
+        Pair<Predicate<ItemUsageContext>, Consumer<ItemUsageContext>> pair = (Pair) TILLING_ACTIONS.get(world.getBlockState(blockPos).getBlock());
         if (pair == null) {
             return ActionResult.PASS;
         } else {
-            Predicate<ItemUsageContext> predicate = (Predicate)pair.getFirst();
-            Consumer<ItemUsageContext> consumer = (Consumer)pair.getSecond();
+            Predicate<ItemUsageContext> predicate = (Predicate) pair.getFirst();
+            Consumer<ItemUsageContext> consumer = (Consumer) pair.getSecond();
+            // planned behavior, tills blocks in a plus shape (same as harvesting)
+            /*tillBlock(context,blockPos.north());
+            tillBlock(context,blockPos.east());
+            tillBlock(context,blockPos.south());
+            tillBlock(context,blockPos.west());*/
             if (predicate.test(context)) {
                 PlayerEntity playerEntity = context.getPlayer();
                 world.playSound(playerEntity, blockPos, SoundEvents.ITEM_HOE_TILL, SoundCategory.BLOCKS, 1.0F, 1.0F);
@@ -80,6 +104,138 @@ public class ScytheItem extends ToolItem implements Vanishable {
             }
         }
     }
+    public void tillBlock(ItemUsageContext context, BlockPos blockPos) {
+        World world = context.getWorld();
+        Pair<Predicate<ItemUsageContext>, Consumer<ItemUsageContext>> pair = (Pair) TILLING_ACTIONS.get(world.getBlockState(blockPos).getBlock());
+        if (pair == null) {
+            return;
+        } else {
+            Predicate<ItemUsageContext> predicate = (Predicate) pair.getFirst();
+            Consumer<ItemUsageContext> consumer = (Consumer) pair.getSecond();
+            if (predicate.test(context)) {
+                PlayerEntity playerEntity = context.getPlayer();
+                world.playSound(playerEntity, blockPos, SoundEvents.ITEM_HOE_TILL, SoundCategory.BLOCKS, 1.0F, 1.0F);
+                if (!world.isClient) {
+                    consumer.accept(context);
+                    if (playerEntity != null) {
+                        context.getStack().damage(1, playerEntity, (p) -> {
+                            p.sendToolBreakStatus(context.getHand());
+                        });
+                    }
+                }
+            }
+        }
+    }
+    public ActionResult blockHarvest(ItemUsageContext context, BlockPos blockPos) {
+        World world = context.getWorld();
+        if (!world.isClient()) {
+            ServerPlayerEntity playerEntity = (ServerPlayerEntity) context.getPlayer();
+            Block block = world.getBlockState(blockPos).getBlock();
+            if (block instanceof CropBlock crop && crop.isMature(world.getBlockState(blockPos)) && playerEntity != null) {
+                LootContext.Builder builder = new LootContext.Builder((ServerWorld) world)
+                        .random(world.random)
+                        .parameter(LootContextParameters.ORIGIN, Vec3d.ofCenter(blockPos))
+                        .parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.MAIN_HAND))
+                        .parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.OFF_HAND));
+                List<ItemStack> cropDrops = world.getBlockState(blockPos).getDroppedStacks(builder);
+                for (ItemStack i : cropDrops) {
+                    if (!playerEntity.giveItemStack(i)) {
+                        playerEntity.dropStack(i);
+                    }
+                }
+                BlockPos finalPos1 = blockPos;
+                if (1 == playerEntity.getInventory().remove(itemStack -> itemStack.isOf((crop.getPickStack(world, finalPos1, world.getBlockState(finalPos1))).getItem()), 1, playerEntity.getInventory())) {
+                    world.setBlockState(blockPos, crop.getDefaultState());
+                } else {
+                    world.setBlockState(blockPos, Blocks.AIR.getDefaultState());
+                }
+                PacketByteBuf buf = PacketByteBufs.create();
+                buf.writeBlockPos(blockPos);
+                for (ServerPlayerEntity player : PlayerLookup.tracking((ServerWorld) world,blockPos)) {
+                    ServerPlayNetworking.send(player, HARVEST_PACKET_ID, buf);
+                }
+                context.getStack().damage(1, playerEntity, (p) -> {
+                    p.sendToolBreakStatus(context.getHand());
+                });
+                return ActionResult.SUCCESS;
+            } else if (block instanceof SugarCaneBlock && playerEntity != null) {
+                if (!(world.getBlockState(blockPos.down()).getBlock() instanceof SugarCaneBlock)) {
+                    if (!(world.getBlockState(blockPos.up()).getBlock() instanceof SugarCaneBlock)) {
+                        return ActionResult.FAIL;
+                    }
+                    blockPos = blockPos.up();
+                }
+                short countCanes = 0;
+                while (world.getBlockState(blockPos.up(countCanes)).getBlock() instanceof SugarCaneBlock) {
+                    world.breakBlock(blockPos.up(countCanes),false);
+                    countCanes++;
+                }
+                ItemStack i = new ItemStack(Items.SUGAR_CANE,countCanes);
+                if (!playerEntity.giveItemStack(i)) {
+                    playerEntity.dropStack(i);
+                }
+                context.getStack().damage(1, playerEntity, (p) -> {
+                    p.sendToolBreakStatus(context.getHand());
+                });
+                return ActionResult.SUCCESS;
+            } else if (block instanceof CocoaBlock cocoa && playerEntity != null && world.getBlockState(blockPos).get(CocoaBlock.AGE) == 2) {
+                LootContext.Builder builder = new LootContext.Builder((ServerWorld) world)
+                        .random(world.random)
+                        .parameter(LootContextParameters.ORIGIN, Vec3d.ofCenter(blockPos))
+                        .parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.MAIN_HAND))
+                        .parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.OFF_HAND));
+                List<ItemStack> cocoaDrops = world.getBlockState(blockPos).getDroppedStacks(builder);
+                for (ItemStack i : cocoaDrops) {
+                    if (!playerEntity.giveItemStack(i)) {
+                        playerEntity.dropStack(i);
+                    }
+                }
+                if (1 == playerEntity.getInventory().remove(itemStack -> itemStack.isOf(Items.COCOA_BEANS), 1, playerEntity.getInventory())) {
+                    world.setBlockState(blockPos, cocoa.getDefaultState());
+                } else {
+                    world.setBlockState(blockPos, Blocks.AIR.getDefaultState());
+                }
+                PacketByteBuf buf = PacketByteBufs.create();
+                buf.writeBlockPos(blockPos);
+                for (ServerPlayerEntity player : PlayerLookup.tracking((ServerWorld) world,blockPos)) {
+                    ServerPlayNetworking.send(player, HARVEST_PACKET_ID, buf);
+                }
+                world.setBlockState(blockPos, world.getBlockState(blockPos).with(CocoaBlock.AGE,0),2);
+                context.getStack().damage(1, playerEntity, (p) -> {
+                    p.sendToolBreakStatus(context.getHand());
+                });
+                return ActionResult.SUCCESS;
+            } else if (block instanceof NetherWartBlock netherWart && playerEntity != null && world.getBlockState(blockPos).get(NetherWartBlock.AGE) == NetherWartBlock.MAX_AGE) {
+                LootContext.Builder builder = new LootContext.Builder((ServerWorld) world)
+                        .random(world.random)
+                        .parameter(LootContextParameters.ORIGIN, Vec3d.ofCenter(blockPos))
+                        .parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.MAIN_HAND))
+                        .parameter(LootContextParameters.TOOL, playerEntity.getStackInHand(Hand.OFF_HAND));
+                List<ItemStack> wartDrops = world.getBlockState(blockPos).getDroppedStacks(builder);
+                for (ItemStack i : wartDrops) {
+                    if (!playerEntity.giveItemStack(i)) {
+                        playerEntity.dropStack(i);
+                    }
+                }
+                if (1 == playerEntity.getInventory().remove(itemStack -> itemStack.isOf(Items.NETHER_WART), 1, playerEntity.getInventory())) {
+                    world.setBlockState(blockPos, netherWart.getDefaultState());
+                } else {
+                    world.setBlockState(blockPos, Blocks.AIR.getDefaultState());
+                }
+                PacketByteBuf buf = PacketByteBufs.create();
+                buf.writeBlockPos(blockPos);
+                for (ServerPlayerEntity player : PlayerLookup.tracking((ServerWorld) world,blockPos)) {
+                    ServerPlayNetworking.send(player, HARVEST_PACKET_ID, buf);
+                }
+                world.setBlockState(blockPos, world.getBlockState(blockPos).with(NetherWartBlock.AGE,0),2);
+                context.getStack().damage(1, playerEntity, (p) -> {
+                    p.sendToolBreakStatus(context.getHand());
+                });
+                return ActionResult.SUCCESS;
+            }
+        }
+        return null;
+    }
 
     public static Consumer<ItemUsageContext> createTillAction(BlockState result) {
         return (context) -> {
@@ -94,10 +250,6 @@ public class ScytheItem extends ToolItem implements Vanishable {
             context.getWorld().emitGameEvent(GameEvent.BLOCK_CHANGE, context.getBlockPos(), GameEvent.Context.create(context.getPlayer(), result));
             Block.dropStack(context.getWorld(), context.getBlockPos(), context.getSide(), new ItemStack(droppedItem));
         };
-    }
-
-    public static boolean canTillFarmland(ItemUsageContext context) {
-        return context.getSide() != Direction.DOWN && context.getWorld().getBlockState(context.getBlockPos().up()).isAir();
     }
 
     static {
@@ -142,7 +294,7 @@ public class ScytheItem extends ToolItem implements Vanishable {
         } else if (i < 2 && state.isIn(BlockTags.NEEDS_IRON_TOOL)) {
             return false;
         } else {
-            return i < 1 && state.isIn(BlockTags.NEEDS_STONE_TOOL) ? false : state.isIn(this.effectiveBlocks);
+            return i < 1 && state.isIn(BlockTags.NEEDS_STONE_TOOL) ? false : state.isIn(this.effectiveBlocks) || state.isOf(Blocks.COBWEB);
         }
     }
 }
