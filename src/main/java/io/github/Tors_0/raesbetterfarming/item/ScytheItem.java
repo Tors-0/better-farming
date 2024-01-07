@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.mojang.datafixers.util.Pair;
+import io.github.Tors_0.raesbetterfarming.modifier.ModifiableItemUsageContext;
 import net.minecraft.block.*;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
@@ -81,11 +82,11 @@ public class ScytheItem extends ToolItem implements Vanishable {
         } else {
             Predicate<ItemUsageContext> predicate = (Predicate) pair.getFirst();
             Consumer<ItemUsageContext> consumer = (Consumer) pair.getSecond();
-            // planned behavior, tills blocks in a plus shape (same as harvesting)
-            /*tillBlock(context,blockPos.north());
-            tillBlock(context,blockPos.east());
-            tillBlock(context,blockPos.south());
-            tillBlock(context,blockPos.west());*/
+            // tills blocks in a plus shape (same as harvesting)
+            tillBlock(new ModifiableItemUsageContext(context,blockPos.north()));
+            tillBlock(new ModifiableItemUsageContext(context,blockPos.east()));
+            tillBlock(new ModifiableItemUsageContext(context,blockPos.south()));
+            tillBlock(new ModifiableItemUsageContext(context,blockPos.west()));
             if (predicate.test(context)) {
                 PlayerEntity playerEntity = context.getPlayer();
                 world.playSound(playerEntity, blockPos, SoundEvents.ITEM_HOE_TILL, SoundCategory.BLOCKS, 1.0F, 1.0F);
@@ -104,8 +105,9 @@ public class ScytheItem extends ToolItem implements Vanishable {
             }
         }
     }
-    public void tillBlock(ItemUsageContext context, BlockPos blockPos) {
+    public void tillBlock(ItemUsageContext context) {
         World world = context.getWorld();
+        BlockPos blockPos = context.getBlockPos();
         Pair<Predicate<ItemUsageContext>, Consumer<ItemUsageContext>> pair = (Pair) TILLING_ACTIONS.get(world.getBlockState(blockPos).getBlock());
         if (pair == null) {
             return;
