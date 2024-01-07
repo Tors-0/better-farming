@@ -22,7 +22,7 @@ public abstract class CropBlockMixin {
 	public abstract void applyGrowth(World world, BlockPos pos, BlockState state);
 
 	@Inject(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/random/RandomGenerator;nextInt(I)I"), locals = LocalCapture.CAPTURE_FAILSOFT)
-	public void raes_farming$randomTick(BlockState state, ServerWorld world, BlockPos pos, RandomGenerator random, CallbackInfo ci, int i, float f) {
+	public void raes_farming$randomCropTick(BlockState state, ServerWorld world, BlockPos pos, RandomGenerator random, CallbackInfo ci, int i, float f) {
 		if (f >= 3.5 && i < this.getMaxAge()-1 && Math.random()/3 > (1f/f)) {
 			this.applyGrowth(world,pos,state);
 		}

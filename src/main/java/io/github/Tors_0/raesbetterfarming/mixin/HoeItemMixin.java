@@ -17,6 +17,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.quiltmc.qsl.networking.api.PacketByteBufs;
+import org.quiltmc.qsl.networking.api.PlayerLookup;
 import org.quiltmc.qsl.networking.api.ServerPlayNetworking;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -31,7 +32,7 @@ import static io.github.Tors_0.raesbetterfarming.networking.RBFNetworking.HARVES
 @Mixin(HoeItem.class)
 public class HoeItemMixin {
 	@Inject(method = "useOnBlock", at = @At(value = "HEAD"), cancellable = true)
-	public void raes_farming$useOnBlock(ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
+	public void raes_farming$useHoeOnBlock(ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
 		World world = context.getWorld();
 		if (!world.isClient()) {
 			ServerPlayerEntity playerEntity = (ServerPlayerEntity) context.getPlayer();
@@ -57,7 +58,9 @@ public class HoeItemMixin {
                 }
                 PacketByteBuf buf = PacketByteBufs.create();
                 buf.writeBlockPos(pos);
-                ServerPlayNetworking.send(playerEntity,HARVEST_PACKET_ID,buf);
+                for (ServerPlayerEntity player : PlayerLookup.tracking((ServerWorld) world,pos)) {
+                    ServerPlayNetworking.send(player, HARVEST_PACKET_ID, buf);
+                }
                 context.getStack().damage(1, playerEntity, (p) -> {
                     p.sendToolBreakStatus(context.getHand());
                 });
@@ -101,7 +104,9 @@ public class HoeItemMixin {
                 }
                 PacketByteBuf buf = PacketByteBufs.create();
                 buf.writeBlockPos(pos);
-                ServerPlayNetworking.send(playerEntity,HARVEST_PACKET_ID,buf);
+                for (ServerPlayerEntity player : PlayerLookup.tracking((ServerWorld) world,pos)) {
+                    ServerPlayNetworking.send(player, HARVEST_PACKET_ID, buf);
+                }
                 world.setBlockState(pos, world.getBlockState(pos).with(CocoaBlock.AGE,0),2);
                 context.getStack().damage(1, playerEntity, (p) -> {
                     p.sendToolBreakStatus(context.getHand());
@@ -126,7 +131,9 @@ public class HoeItemMixin {
                 }
                 PacketByteBuf buf = PacketByteBufs.create();
                 buf.writeBlockPos(pos);
-                ServerPlayNetworking.send(playerEntity,HARVEST_PACKET_ID,buf);
+                for (ServerPlayerEntity player : PlayerLookup.tracking((ServerWorld) world,pos)) {
+                    ServerPlayNetworking.send(player, HARVEST_PACKET_ID, buf);
+                }
                 world.setBlockState(pos, world.getBlockState(pos).with(NetherWartBlock.AGE,0),2);
                 context.getStack().damage(1, playerEntity, (p) -> {
                     p.sendToolBreakStatus(context.getHand());

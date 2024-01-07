@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ShearsItem.class)
 public class ShearsItemMixin {
     @Inject(method = "useOnBlock", at = @At(value = "HEAD"), cancellable = true)
-    public void raes_farming$useOnBlock(ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
+    public void raes_farming$useShearsOnBlock(ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
         World world = context.getWorld();
         if (!world.isClient()) {
             PlayerEntity playerEntity = context.getPlayer();
