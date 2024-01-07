@@ -65,10 +65,10 @@ public class HoeItemMixin {
 				cir.setReturnValue(ActionResult.SUCCESS);
 			} else if (block instanceof SugarCaneBlock && playerEntity != null) {
                 if (!(world.getBlockState(pos.down()).getBlock() instanceof SugarCaneBlock)) {
-                    pos = pos.up();
                     if (!(world.getBlockState(pos.up()).getBlock() instanceof SugarCaneBlock)) {
                         cir.setReturnValue(ActionResult.FAIL);
                     }
+                    pos = pos.up();
                 }
                 short countCanes = 0;
                 while (world.getBlockState(pos.up(countCanes)).getBlock() instanceof SugarCaneBlock) {
