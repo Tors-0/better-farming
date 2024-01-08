@@ -11,6 +11,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.block.*;
+import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
@@ -28,17 +29,22 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.TagKey;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
+import org.jetbrains.annotations.Nullable;
 import org.quiltmc.qsl.networking.api.PacketByteBufs;
 import org.quiltmc.qsl.networking.api.PlayerLookup;
 import org.quiltmc.qsl.networking.api.ServerPlayNetworking;
 
+import java.awt.*;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -297,5 +303,12 @@ public class SickleItem extends SwordItem implements Vanishable {
         } else {
             return i < 1 && state.isIn(BlockTags.NEEDS_STONE_TOOL) ? false : state.isIn(this.effectiveBlocks) || state.isOf(Blocks.COBWEB);
         }
+    }
+
+    @Override
+    public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+        tooltip.add(Text.translatable("enchantment.minecraft.sweeping").setStyle(Style.EMPTY.withColor(Formatting.DARK_PURPLE).withItalic(true)).append(Text.literal(" ?").setStyle(Style.EMPTY.withItalic(true).withColor(Formatting.DARK_PURPLE).withObfuscated(true))));
+        tooltip.add(Text.translatable("enchantment.minecraft.looting").setStyle(Style.EMPTY.withColor(Formatting.DARK_PURPLE).withItalic(true)).append(" ").append(Text.translatable("enchantment.level.1").setStyle(Style.EMPTY.withItalic(true).withColor(Formatting.DARK_PURPLE))));
+        super.appendTooltip(stack, world, tooltip, context);
     }
 }

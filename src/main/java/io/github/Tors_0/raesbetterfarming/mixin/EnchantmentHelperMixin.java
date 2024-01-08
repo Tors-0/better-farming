@@ -17,8 +17,14 @@ public class EnchantmentHelperMixin {
     @Inject(method = "getSweepingMultiplier", at = @At(value = "TAIL"), locals = LocalCapture.CAPTURE_FAILSOFT, cancellable = true)
     private static void raes_farming$doSweepingForSickle(LivingEntity entity, CallbackInfoReturnable<Float> cir) {
         if (entity.getStackInHand(Hand.MAIN_HAND).getItem() instanceof SickleItem) {
-            int i = EnchantmentHelper.getEquipmentLevel(Enchantments.SWEEPING, entity) + 3;
-            cir.setReturnValue(i > 0 ? SweepingEnchantment.getMultiplier(i) : 0.0F);
+            int i = EnchantmentHelper.getEquipmentLevel(Enchantments.SWEEPING, entity) + 1;
+            cir.setReturnValue(i > 0 ? SweepingEnchantment.getMultiplier(i) + 0.4f : 0.0F);
+        }
+    }
+    @Inject(method = "getLooting", at = @At(value = "HEAD"), cancellable = true)
+    private static void raes_farming$doLootingForSickle(LivingEntity entity, CallbackInfoReturnable<Integer> cir) {
+        if (entity.getStackInHand(Hand.MAIN_HAND).getItem() instanceof SickleItem) {
+            cir.setReturnValue(EnchantmentHelper.getEquipmentLevel(Enchantments.LOOTING, entity) + 1);
         }
     }
 }
