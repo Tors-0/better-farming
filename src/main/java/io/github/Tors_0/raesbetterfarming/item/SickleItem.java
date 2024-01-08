@@ -294,6 +294,11 @@ public class SickleItem extends SwordItem implements Vanishable {
         return this.attackDamage;
     }
 
+    @Override
+    public void onCraft(ItemStack stack, World world, PlayerEntity player) {
+        world.playSound(player,player.getBlockPos(),SoundEvents.BLOCK_SMITHING_TABLE_USE,SoundCategory.BLOCKS,1f,1f);
+    }
+
     public boolean isSuitableFor(BlockState state) {
         int i = this.getMaterial().getMiningLevel();
         if (i < 3 && state.isIn(BlockTags.NEEDS_DIAMOND_TOOL)) {
@@ -307,8 +312,7 @@ public class SickleItem extends SwordItem implements Vanishable {
 
     @Override
     public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-        tooltip.add(Text.translatable("enchantment.minecraft.sweeping").setStyle(Style.EMPTY.withColor(Formatting.DARK_PURPLE).withItalic(true)).append(Text.literal(" ?").setStyle(Style.EMPTY.withItalic(true).withColor(Formatting.DARK_PURPLE).withObfuscated(true))));
-        tooltip.add(Text.translatable("enchantment.minecraft.looting").setStyle(Style.EMPTY.withColor(Formatting.DARK_PURPLE).withItalic(true)).append(" ").append(Text.translatable("enchantment.level.1").setStyle(Style.EMPTY.withItalic(true).withColor(Formatting.DARK_PURPLE))));
+        tooltip.add(Text.translatable("tooltip.raesbetterfarming.sickles").setStyle(Style.EMPTY.withColor(Formatting.DARK_PURPLE).withItalic(true)));
         super.appendTooltip(stack, world, tooltip, context);
     }
 }

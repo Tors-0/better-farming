@@ -6,5 +6,8 @@
   "item.raesbetterfarming.diamond_sickle": "Diamond Sickle",
   "item.raesbetterfarming.netherite_sickle": "Netherite Sickle",
 
-  "item.raesbetterfarming.hammer": "Hammer"
+  "item.raesbetterfarming.hammer": "Hammer",
+
+  "--Tooltips--": "",
+  "tooltip.raesbetterfarming.sickles": "You feel a bit lucky while holding this..."
 }
