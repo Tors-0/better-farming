@@ -6,6 +6,13 @@ Tweaks and updates to Minecraft's farming system are as follows:
 - Sugar Cane
 - Cocoa Beans
 - Nether Wart
+### Sickles!
+- Crafted with any Sword and a Hammer
+  - "Beat your swords into plowshares!"
+- Have innate looting and amplified sweeping damage
+- Till ground in a 5-block plus shape
+- Harvest crops like a Hoe, but in a 5-block plus shape
+- Deal moderate damage at a somewhat slow speed
 ### Shears can be used to right-click harvest:
 - Vines, Twisting Vines, Weeping Vines
 ### Crops on well hydrated farmland grow faster
