@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "raesbetterfarming:wooden_sickle",
+    "raesbetterfarming:stone_sickle",
+    "raesbetterfarming:golden_sickle",
+    "raesbetterfarming:iron_sickle",
+    "raesbetterfarming:diamond_sickle",
+    "raesbetterfarming:netherite_sickle"
+  ]
+}
