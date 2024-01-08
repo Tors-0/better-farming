@@ -8,7 +8,7 @@ Tweaks and updates to Minecraft's farming system are as follows:
 - Nether Wart
 ### Sickles!
 - Crafted with any Sword and a Hammer
-  - "Beat your swords into plowshares!"
+  - Hammers can be found in villages or obtained from toolsmiths at Master level via trading
 - Have innate looting and amplified sweeping damage
 - Till ground in a 5-block plus shape
 - Harvest crops like a Hoe, but in a 5-block plus shape

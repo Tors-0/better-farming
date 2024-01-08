@@ -1,5 +1,7 @@
 package io.github.Tors_0.raesbetterfarming;
 
+import io.github.Tors_0.raesbetterfarming.registry.ModLootTables;
+import io.github.Tors_0.raesbetterfarming.registry.ModTradeOffers;
 import net.fabricmc.fabric.api.loot.v2.LootTableEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -33,29 +35,13 @@ public class RaesBetterFarming implements ModInitializer {
 	public void onInitialize(ModContainer mod) {
 		LOGGER.info("Now initializing {} version {}", mod.metadata().name(), mod.metadata().version());
 
+        // register all mod items
 		ModItems.init();
+        // register all loot table modifications
+        ModLootTables.init();
+        // register all trade modifications
+        ModTradeOffers.init();
 
-        LootTableEvents.MODIFY.register((resourceManager, lootManager, id, tableBuilder, source) -> {
-            if (source.isBuiltin() && LootTables.VILLAGE_TOOLSMITH_CHEST.equals(id)) {
-                LootPool.Builder poolBuilder = LootPool.builder()
-                        .with(ItemEntry.builder(ModItems.HAMMER));
-                tableBuilder.pool(poolBuilder);
-            }
-        });
-        LootTableEvents.MODIFY.register((resourceManager, lootManager, id, tableBuilder, source) -> {
-            if (source.isBuiltin() && LootTables.VILLAGE_WEAPONSMITH_CHEST.equals(id)) {
-                LootPool.Builder poolBuilder = LootPool.builder()
-                        .with(ItemEntry.builder(ModItems.HAMMER));
-                tableBuilder.pool(poolBuilder);
-            }
-        });
-        TradeOfferHelper.registerVillagerOffers(VillagerProfession.TOOLSMITH, 1,
-                factories -> {
-                    factories.add((entity, random) -> new TradeOffer(
-                            new ItemStack(Items.EMERALD, 10),
-                            new ItemStack(ModItems.HAMMER, 1),
-                            1, 5, 0.02f
-                    ));
-                });
+        LOGGER.info("{} finished mod initialization", mod.metadata().name());
 	}
 }
