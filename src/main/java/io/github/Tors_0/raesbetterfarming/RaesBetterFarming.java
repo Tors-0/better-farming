@@ -26,9 +26,11 @@ import java.util.function.Consumer;
 
 public class RaesBetterFarming implements ModInitializer {
 	public static final String ID = "raesbetterfarming";
-	// This logger is used to write text to the console and the log file.
-	// It is considered best practice to use your mod name as the logger's name.
-	// That way, it's clear which mod wrote info, warnings, and errors.
+	 /*
+	 This logger is used to write text to the console and the log file.
+	 It is considered best practice to use your mod name as the logger's name.
+	 That way, it's clear which mod wrote info, warnings, and errors
+	 */
 	public static final Logger LOGGER = LoggerFactory.getLogger(ID);
 
 	@Override
