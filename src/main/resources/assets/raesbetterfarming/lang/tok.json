@@ -4,9 +4,9 @@
   "item.raesbetterfarming.golden_sickle": "ilo jelo pi kipisi kasi",
   "item.raesbetterfarming.iron_sickle": "ilo walo  pi kipisi kasi",
   "item.raesbetterfarming.diamond_sickle": "ilo laso pi kipisi kasi",
-  "item.raesbetterfarming.netherite_sickle": "ilo pi mani Netherite pi kipisi kasi",
+  "item.raesbetterfarming.netherite_sickle": "ilo pimeja pi kipisi kasi",
 
-  "item.raesbetterfarming.hammer": "ilo pi pali lipu",
+  "item.raesbetterfarming.hammer": "ilo pali",
 
 
   "--Tooltips--": "",
@@ -14,9 +14,9 @@
 
 
   "--Advancements--": "",
-  "advancements.raesbetterfarming.hammertime.title": "tenpo pi ilo pi pali lipu!",
-  "advancements.raesbetterfarming.hammertime.desc": "o kama jo e ilo pi pali lipu tan jan tomo",
+  "advancements.raesbetterfarming.hammertime.title": "tenpo pi ilo pali!",
+  "advancements.raesbetterfarming.hammertime.desc": "o kama jo e ilo pali tan jan tomo",
 
   "advancements.raesbetterfarming.beatyourswords.title": "jan kasi pona",
-  "advancements.raesbetterfarming.beatyourswords.desc": "o pali e ilo pi kipisi kasi tan ilo utala kepeken ilo pi pali lipu"
+  "advancements.raesbetterfarming.beatyourswords.desc": "o pali e ilo pi kipisi kasi tan ilo utala kepeken ilo pali"
 }

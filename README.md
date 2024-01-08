@@ -19,4 +19,6 @@ Tweaks and updates to Minecraft's farming system are as follows:
 - This depends on how much hydrated farmland is nearby
 - The boost is always chance based, even crops fully surrounded by hydrated farmland aren't guaranteed a boost
 # Credits
-[Raeeeee](https://github.com/Tors-0) - Owner + Artist (Except textures sourced from MC)
+- [Raeeeee](https://github.com/Tors-0) - Owner + Artist (Except textures sourced from MC)
+- Community Translators
+  - @niko moku nanpa SAN (toki pona)
