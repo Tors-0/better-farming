@@ -33,7 +33,7 @@ public interface ModItems {
             new SickleItem(0f,-1.6f,ToolMaterials.NETHERITE, new QuiltItemSettings().group(ItemGroup.TOOLS)));
     // add a hammer to use for making sickles (hammer and sickle farming mod lets gooo!)
     public static final Item HAMMER = createItem("hammer",
-            new HammerItem(ToolMaterials.IRON, new QuiltItemSettings().group(ItemGroup.TOOLS).recipeDamageRemainder(10)));
+            new HammerItem(4f,-3.5f,ToolMaterials.IRON, new QuiltItemSettings().group(ItemGroup.TOOLS).recipeDamageRemainder(10)));
     private static <T extends Item> T createItem(String name, T item) {
         ITEMS.put(item, new Identifier(RaesBetterFarming.ID, name));
         return item;

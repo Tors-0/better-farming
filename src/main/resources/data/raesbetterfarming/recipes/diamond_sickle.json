@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:diamond_sword"
+    },
+    {
+      "item": "raesbetterfarming:hammer"
+    }
+  ],
+  "result": {
+    "item": "raesbetterfarming:diamond_sickle"
+  }
+}
