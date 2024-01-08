@@ -19,6 +19,7 @@ public interface ModItems {
 	// public static final Item NAME = createItem("name", new ModItem(new QuiltItemSettings()));
 
     // scythe attack speed/damage = ( hoe attack speed + sword attack speed ) / 2
+    // TODO make sickles atk speed sit between hoes and axes rather than hoes and swords
     public static final Item WOODEN_SCYTHE = createItem("wooden_scythe",
             new ScytheItem(1.5f,-2.7f,ToolMaterials.WOOD, new QuiltItemSettings().group(ItemGroup.TOOLS)));
     public static final Item STONE_SCYTHE = createItem("stone_scythe",
