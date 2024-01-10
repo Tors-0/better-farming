@@ -13,14 +13,14 @@ public class ModLootTables {
         LootTableEvents.MODIFY.register((resourceManager, lootManager, id, tableBuilder, source) -> {
             if (source.isBuiltin() && LootTables.VILLAGE_TOOLSMITH_CHEST.equals(id)) {
                 LootPool.Builder poolBuilder = LootPool.builder()
-                        .with(ItemEntry.builder(ModItems.HAMMER));
+                        .with(ItemEntry.builder(ModItems.HAMMER_));
                 tableBuilder.pool(poolBuilder);
             }
         });
         LootTableEvents.MODIFY.register((resourceManager, lootManager, id, tableBuilder, source) -> {
             if (source.isBuiltin() && LootTables.VILLAGE_WEAPONSMITH_CHEST.equals(id)) {
                 LootPool.Builder poolBuilder = LootPool.builder()
-                        .with(ItemEntry.builder(ModItems.HAMMER));
+                        .with(ItemEntry.builder(ModItems.HAMMER_));
                 tableBuilder.pool(poolBuilder);
             }
         });

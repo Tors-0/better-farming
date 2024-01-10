@@ -17,6 +17,12 @@ repositories {
 		name 'Quilt'
 		url 'https://maven.quiltmc.org/repository/release'
 	}
+
+    // Registrate Refabricated is hosted on this maven.
+    maven { url = "https://mvn.devos.one/snapshots/" }
+
+
+    maven { url = "https://jitpack.io/" } // for Porting Lib: Mixin Extras, Fabric ASM
 }
 
 // All the dependencies are declared at gradle/libs.version.toml and referenced with "libs.<id>"
@@ -29,7 +35,11 @@ dependencies {
 
 	modImplementation "org.quiltmc:qsl:${qsl_version}+${minecraft_version}"
     modImplementation "org.quiltmc.quilted-fabric-api:quilted-fabric-api:${quilted_fabric_api_version}-${minecraft_version}"
+
+    // depend on and include Registrate.
+    modImplementation(include("com.tterrag.registrate_fabric:Registrate:${project.registrate_version}"))
 }
+
 
 processResources {
 	inputs.property 'version', version

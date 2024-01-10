@@ -15,7 +15,7 @@ public class ModTradeOffers {
                 factories -> {
                     factories.add((entity, random) -> new TradeOffer(
                             new ItemStack(Items.EMERALD, 15),
-                            new ItemStack(ModItems.HAMMER, 1),
+                            new ItemStack(ModItems.HAMMER_, 1),
                             3, 5, 0.2f
                     ));
                 });

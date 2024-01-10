@@ -13,5 +13,8 @@ public class RaesBetterFarmingClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient(ModContainer mod) {
 		RBFNetworking.init();
+
+
+
 	}
 }
