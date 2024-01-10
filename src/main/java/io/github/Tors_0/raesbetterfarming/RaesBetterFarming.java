@@ -1,6 +1,5 @@
 package io.github.Tors_0.raesbetterfarming;
 
-import com.tterrag.registrate.Registrate;
 import io.github.Tors_0.raesbetterfarming.registry.ModItems;
 import io.github.Tors_0.raesbetterfarming.registry.ModLootTables;
 import io.github.Tors_0.raesbetterfarming.registry.ModTradeOffers;
@@ -18,7 +17,6 @@ public class RaesBetterFarming implements ModInitializer {
 	 */
 	public static final Logger LOGGER = LoggerFactory.getLogger(ID);
 
-    public static final Registrate REGISTRATE = Registrate.create(ID);
 
 	@Override
 	public void onInitialize(ModContainer mod) {

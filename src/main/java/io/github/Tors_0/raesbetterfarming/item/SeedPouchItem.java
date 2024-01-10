@@ -7,8 +7,11 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.client.item.BundleTooltipData;
 import net.minecraft.client.item.TooltipContext;
+import net.minecraft.client.item.TooltipData;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.*;
@@ -27,6 +30,7 @@ import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Property;
 import net.minecraft.text.Text;
 import net.minecraft.util.*;
+import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
@@ -34,6 +38,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -64,15 +69,17 @@ public class SeedPouchItem extends Item {
                 return ActionResult.FAIL;
             } else {
                 BlockState blockState = this.getPlacementState(itemPlacementContext);
+                ItemStack itemStack = itemPlacementContext.getStack();
                 if (blockState == null) {
                     return ActionResult.FAIL;
                 } else if (!this.place(itemPlacementContext, blockState)) {
+                    return ActionResult.FAIL;
+                } else if (getBundleOccupancy(itemStack) < 1) {
                     return ActionResult.FAIL;
                 } else {
                     BlockPos blockPos = itemPlacementContext.getBlockPos();
                     World world = itemPlacementContext.getWorld();
                     PlayerEntity playerEntity = itemPlacementContext.getPlayer();
-                    ItemStack itemStack = itemPlacementContext.getStack();
                     BlockState blockState2 = world.getBlockState(blockPos);
                     if (blockState2.isOf(blockState.getBlock())) {
                         blockState2 = this.placeFromTag(blockPos, world, itemStack, blockState2);
@@ -86,12 +93,12 @@ public class SeedPouchItem extends Item {
                     BlockSoundGroup blockSoundGroup = blockState2.getSoundGroup();
                     world.playSound(playerEntity, blockPos, this.getPlaceSound(blockState2), SoundCategory.BLOCKS, (blockSoundGroup.getVolume() + 1.0F) / 2.0F, blockSoundGroup.getPitch() * 0.8F);
                     world.emitGameEvent(GameEvent.BLOCK_PLACE, blockPos, GameEvent.Context.create(playerEntity, blockState2));
-                    NbtList nbtList = itemStack.getOrCreateNbt().getList("Items", NbtElement.COMPOUND_TYPE);
-                    ItemStack consumed = ItemStack.fromNbt(nbtList.getCompound(0));
+
+                    ItemStack consumed = removeFirstStack(itemStack).get();
                     consumed.decrement(1);
-                    // write new code
-                   /* nbtList.remove(0);
-                    nbtList.add(0,consumed.getNbt());*/
+                    if (!consumed.isEmpty()) {
+                        addToBundle(itemStack,consumed);
+                    }
 
                     return ActionResult.success(world.isClient);
                 }
@@ -248,14 +255,17 @@ public class SeedPouchItem extends Item {
             return false;
         }
     }
+    public void onItemEntityDestroyed(ItemEntity entity) {
+        ItemUsage.spawnItemContents(entity, getBundledStacks(entity.getStack()));
+    }
     private void playRemoveOneSound(Entity entity) {
-        entity.playSound(SoundEvents.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.8F, 0.8F + entity.getWorld().getRandom().nextFloat() * 0.4F);
+        entity.playSound(SoundEvents.ITEM_BUNDLE_REMOVE_ONE, 0.8F, 0.8F + entity.getWorld().getRandom().nextFloat() * 0.4F);
     }
     private void playDropContentsSound(Entity entity) {
-        entity.playSound(SoundEvents.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.8F, 0.8F + entity.getWorld().getRandom().nextFloat() * -0.4F);
+        entity.playSound(SoundEvents.ITEM_BUNDLE_DROP_CONTENTS, 0.8F, 0.8F + entity.getWorld().getRandom().nextFloat() * -0.4F);
     }
     private void playInsertSound(Entity entity) {
-        entity.playSound(SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE, 0.8F, 0.8F + entity.getWorld().getRandom().nextFloat() * 0.4F);
+        entity.playSound(SoundEvents.ITEM_BUNDLE_INSERT, 0.8F, 0.8F + entity.getWorld().getRandom().nextFloat() * 0.4F);
     }
     private static Optional<ItemStack> removeFirstStack(ItemStack stack) {
         NbtCompound nbtCompound = stack.getOrCreateNbt();
@@ -315,7 +325,7 @@ public class SeedPouchItem extends Item {
         }
     }
     public static float getAmountFilled(ItemStack stack) {
-        return (float)getBundleOccupancy(stack) / 64.0F;
+        return (float)getBundleOccupancy(stack) / (float) MAX_STORAGE;
     }
     private static Optional<NbtCompound> canMergeStack(ItemStack stack, NbtList items) {
         return stack.isOf(Items.BUNDLE)
@@ -323,7 +333,7 @@ public class SeedPouchItem extends Item {
                 : items.stream()
                 .filter(NbtCompound.class::isInstance)
                 .map(NbtCompound.class::cast)
-                .filter(nbt -> ItemStack.canCombine(ItemStack.fromNbt(nbt), stack))
+                .filter(nbt -> ItemStack.canCombine(ItemStack.fromNbt(nbt), stack) && ItemStack.fromNbt(nbt).getCount() + stack.getCount() <= 64)
                 .findFirst();
     }
     @Override
@@ -356,7 +366,7 @@ public class SeedPouchItem extends Item {
         }
     }
     private static int getItemOccupancy(ItemStack stack) {
-        return (int)(64 / (float)stack.getMaxCount());
+        return (int)(64f / (float)stack.getMaxCount());
     }
     @Override
     public int getItemBarStep(ItemStack stack) {
@@ -374,8 +384,15 @@ public class SeedPouchItem extends Item {
             return nbtList.stream().map(NbtCompound.class::cast).map(ItemStack::fromNbt);
         }
     }
+    public Optional<TooltipData> getTooltipData(ItemStack stack) {
+        DefaultedList<ItemStack> defaultedList = DefaultedList.of();
+        Stream<ItemStack> stacks = getBundledStacks(stack);
+        Objects.requireNonNull(defaultedList);
+        stacks.forEach(defaultedList::add);
+        return Optional.of(new BundleTooltipData(defaultedList, getBundleOccupancy(stack)));
+    }
     @Override
     public void appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
-        tooltip.add(Text.translatable("item.minecraft.bundle.fullness", getBundleOccupancy(stack), MAX_STORAGE).formatted(Formatting.GRAY));
+        tooltip.add(Text.translatable("item.minecraft.bundle.fullness", new Object[]{getBundleOccupancy(stack), MAX_STORAGE}).formatted(Formatting.GRAY));
     }
 }

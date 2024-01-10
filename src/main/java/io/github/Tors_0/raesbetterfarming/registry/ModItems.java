@@ -1,6 +1,5 @@
 package io.github.Tors_0.raesbetterfarming.registry;
 
-import com.tterrag.registrate.util.entry.RegistryEntry;
 import io.github.Tors_0.raesbetterfarming.RaesBetterFarming;
 import io.github.Tors_0.raesbetterfarming.item.HammerItem;
 import io.github.Tors_0.raesbetterfarming.item.SeedPouchItem;
@@ -16,7 +15,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static io.github.Tors_0.raesbetterfarming.RaesBetterFarming.LOGGER;
-import static io.github.Tors_0.raesbetterfarming.RaesBetterFarming.REGISTRATE;
 
 public interface ModItems {
     Map<Item, Identifier> ITEMS = new LinkedHashMap<>();
@@ -42,8 +40,6 @@ public interface ModItems {
             new HammerItem(4f,-2.9f,ToolMaterials.DIAMOND, new QuiltItemSettings().group(ItemGroup.TOOLS).recipeDamageRemainder(20)));
     Item SEED_POUCH_ = createItem("seed_pouch",
             new SeedPouchItem(new QuiltItemSettings().group(ItemGroup.TOOLS).maxCount(1)));
-    // begin registrate migration
-//    RegistryEntry<Item> WOODEN_SICKLE = REGISTRATE.item("wooden_sickle", );
 
 
     private static <T extends Item> T createItem(String name, T item) {

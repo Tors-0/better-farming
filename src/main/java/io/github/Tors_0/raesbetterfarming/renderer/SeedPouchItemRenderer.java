@@ -31,7 +31,7 @@ public class SeedPouchItemRenderer implements DynamicItemRenderer {
         ItemRenderer itemRenderer = MinecraftClient.getInstance().getItemRenderer();
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
 
-
+        //itemRenderer.renderItem(stack, ModelTransformation.Mode.GUI, light, OverlayTexture.NO_WHITE_U, matrices, vertexConsumers, 0);
         if (mode == ModelTransformation.Mode.GUI) {
             SeedPouchItem.getAmmoForPreview(stack)
                     .ifPresent(ammo -> {
