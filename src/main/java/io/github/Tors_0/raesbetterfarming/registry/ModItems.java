@@ -40,6 +40,8 @@ public interface ModItems {
             new HammerItem(4f,-2.9f,ToolMaterials.DIAMOND, new QuiltItemSettings().group(ItemGroup.TOOLS).recipeDamageRemainder(20)));
     Item SEED_POUCH_ = createItem("seed_pouch",
             new SeedPouchItem(new QuiltItemSettings().group(ItemGroup.TOOLS).maxCount(1)));
+    Item DUMMY_SEED_POUCH_FULL = createItem("dummy_pouch_full", new Item(new QuiltItemSettings()));
+    Item DUMMY_SEED_POUCH_EMPTY = createItem("dummy_pouch_empty", new Item(new QuiltItemSettings()));
 
 
     private static <T extends Item> T createItem(String name, T item) {

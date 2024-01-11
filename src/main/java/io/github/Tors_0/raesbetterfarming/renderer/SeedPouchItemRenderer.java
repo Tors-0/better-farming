@@ -2,28 +2,24 @@ package io.github.Tors_0.raesbetterfarming.renderer;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import io.github.Tors_0.raesbetterfarming.item.SeedPouchItem;
+import io.github.Tors_0.raesbetterfarming.registry.ModItems;
 import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry.DynamicItemRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.entity.model.EntityModelLayers;
 import net.minecraft.client.render.item.ItemRenderer;
 import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.item.BundleItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtElement;
 import org.quiltmc.loader.api.minecraft.ClientOnly;
 
 public class SeedPouchItemRenderer implements DynamicItemRenderer {
 
-    private static final ItemStack POUCH_OPEN_STACK = new ItemStack(Items.BUNDLE);
-    private static final ItemStack POUCH_CLOSED_STACK = new ItemStack(Items.BUNDLE);
-    static {
-        POUCH_CLOSED_STACK.getOrCreateNbt().getList("Items", NbtElement.COMPOUND_TYPE);
-    }
+    private static ItemStack POUCH_OPEN_STACK = new ItemStack(ModItems.DUMMY_SEED_POUCH_EMPTY);
+    private static ItemStack POUCH_CLOSED_STACK = new ItemStack(ModItems.DUMMY_SEED_POUCH_FULL);
 
     public SeedPouchItemRenderer() {}
 
@@ -39,25 +35,34 @@ public class SeedPouchItemRenderer implements DynamicItemRenderer {
      */
     @ClientOnly
     @Override
-    public void render(ItemStack stack, ModelTransformation.Mode mode, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay) {
+    public void render(
+            ItemStack stack, ModelTransformation.Mode mode, MatrixStack matrices,
+            VertexConsumerProvider vertexConsumers, int light, int overlay
+    ) {
         ItemRenderer itemRenderer = MinecraftClient.getInstance().getItemRenderer();
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        ClientWorld world = MinecraftClient.getInstance().world;
+        boolean hasItems = SeedPouchItem.getAmountFilled(stack) > 0;
 
         if (mode == ModelTransformation.Mode.GUI) {
             MatrixStack matrices2 = new MatrixStack();
+            matrices2.translate(0,1/16f,0);
             SeedPouchItem.getAmmoForPreview(stack)
-                    .ifPresentOrElse(ammo -> {
-                        itemRenderer.renderItem(POUCH_OPEN_STACK,ModelTransformation.Mode.GUI,255,OverlayTexture.NO_WHITE_U,matrices2,vertexConsumers,42);
-                        matrices.translate(1 /4f,1 /4f, 1);
-                        matrices.scale(.5f,.5f,.5f);
-                        itemRenderer.renderItem(ammo, ModelTransformation.Mode.GUI, 255, OverlayTexture.DEFAULT_UV, matrices, vertexConsumers, 0);
-                    }, () -> {
+                    .ifPresent(ammo -> {
+                        itemRenderer.renderItem(hasItems ? POUCH_CLOSED_STACK : POUCH_OPEN_STACK,
+                                ModelTransformation.Mode.NONE, light, OverlayTexture.DEFAULT_UV,
+                                matrices2, vertexConsumers, 42);
 
+                        matrices.translate((1/32f)+(2/3f),(1/3f), 1);
+                        matrices.scale(2/3f,2/3f,2/3f);
+
+                        itemRenderer.renderItem(ammo, ModelTransformation.Mode.NONE, light,
+                                OverlayTexture.DEFAULT_UV, matrices, vertexConsumers, 0);
                     });
         } else {
             matrices.translate(.5f,.5f,.5f);
-            itemRenderer.renderItem(POUCH_OPEN_STACK,mode,light,overlay,matrices,vertexConsumers,0);
+
+            itemRenderer.renderItem(hasItems ? POUCH_CLOSED_STACK : POUCH_OPEN_STACK,
+                    mode, light, overlay, matrices, vertexConsumers, 0);
         }
     }
 }

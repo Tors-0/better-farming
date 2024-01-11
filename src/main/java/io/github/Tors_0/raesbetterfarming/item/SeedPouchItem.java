@@ -32,6 +32,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.*;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.Nullable;
@@ -40,10 +41,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 public class SeedPouchItem extends Item {
-    public static final int MAX_STORAGE = 192;
+    public static final int MAX_STORAGE = 384;
     public SeedPouchItem(Settings settings) {
         super(settings);
     }
@@ -74,7 +76,7 @@ public class SeedPouchItem extends Item {
                     return ActionResult.FAIL;
                 } else if (!this.place(itemPlacementContext, blockState)) {
                     return ActionResult.FAIL;
-                } else if (getBundleOccupancy(itemStack) < 1) {
+                } else if (getSeedPouchOccupancy(itemStack) < 1) {
                     return ActionResult.FAIL;
                 } else {
                     BlockPos blockPos = itemPlacementContext.getBlockPos();
@@ -222,7 +224,7 @@ public class SeedPouchItem extends Item {
                 }
                 removeFirstStack(thisStack).ifPresent(removedStack -> addToBundle(thisStack, otherSlot.insertStack(removedStack)));
             } else if (itemStack.getItem().canBeNested() && itemStack.isIn(ModTags.Items.SEEDS)) {
-                int i = (MAX_STORAGE - getBundleOccupancy(thisStack)) / getItemOccupancy(itemStack);
+                int i = (MAX_STORAGE - getSeedPouchOccupancy(thisStack)) / getItemOccupancy(itemStack);
                 int j = addToBundle(thisStack, otherSlot.takeStackRange(itemStack.getCount(), i, player));
                 if (j > 0) {
                     this.playInsertSound(player);
@@ -276,10 +278,29 @@ public class SeedPouchItem extends Item {
             if (nbtList.isEmpty()) {
                 return Optional.empty();
             } else {
-                int i = 0;
                 NbtCompound nbtCompound2 = nbtList.getCompound(0);
                 ItemStack itemStack = ItemStack.fromNbt(nbtCompound2);
                 nbtList.remove(0);
+                if (nbtList.isEmpty()) {
+                    stack.removeSubNbt("Items");
+                }
+
+                return Optional.of(itemStack);
+            }
+        }
+    }
+    private static Optional<ItemStack> removeLastStack(ItemStack stack) {
+        NbtCompound nbtCompound = stack.getOrCreateNbt();
+        if (!nbtCompound.contains("Items")) {
+            return Optional.empty();
+        } else {
+            NbtList nbtList = nbtCompound.getList("Items", NbtElement.COMPOUND_TYPE);
+            if (nbtList.isEmpty()) {
+                return Optional.empty();
+            } else {
+                NbtCompound nbtCompound2 = nbtList.getCompound(nbtList.size()-1);
+                ItemStack itemStack = ItemStack.fromNbt(nbtCompound2);
+                nbtList.remove(nbtList.size()-1);
                 if (nbtList.isEmpty()) {
                     stack.removeSubNbt("Items");
                 }
@@ -295,7 +316,7 @@ public class SeedPouchItem extends Item {
                 nbtCompound.put("Items", new NbtList());
             }
 
-            int i = getBundleOccupancy(bundle);
+            int i = getSeedPouchOccupancy(bundle);
             int j = getItemOccupancy(stack);
             int k = Math.min(stack.getCount(), (MAX_STORAGE - i) / j);
             if (k == 0) {
@@ -325,7 +346,7 @@ public class SeedPouchItem extends Item {
         }
     }
     public static float getAmountFilled(ItemStack stack) {
-        return (float)getBundleOccupancy(stack) / (float) MAX_STORAGE;
+        return (float) getSeedPouchOccupancy(stack) / (float) MAX_STORAGE;
     }
     private static Optional<NbtCompound> canMergeStack(ItemStack stack, NbtList items) {
         return stack.isOf(Items.BUNDLE)
@@ -339,7 +360,15 @@ public class SeedPouchItem extends Item {
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         ItemStack itemStack = user.getStackInHand(hand);
-        if (dropAllBundledItems(itemStack, user)) {
+        if (user.isSneaking()) {
+            Optional<ItemStack> lastStack = removeLastStack(itemStack);
+            if (lastStack.isPresent()) {
+                addToBundle(itemStack,lastStack.get());
+                return TypedActionResult.success(itemStack,world.isClient());
+            } else {
+                return TypedActionResult.fail(itemStack);
+            }
+        } else if (dropAllBundledItems(itemStack, user)) {
             this.playDropContentsSound((Entity) user);
             user.incrementStat(Stats.USED.getOrCreateStat(this));
             return TypedActionResult.success(itemStack, world.isClient());
@@ -370,9 +399,20 @@ public class SeedPouchItem extends Item {
     }
     @Override
     public int getItemBarStep(ItemStack stack) {
-        return Math.min(1 + 12 * getBundleOccupancy(stack) / MAX_STORAGE, 13);
+        return Math.min(1 + 12 * getSeedPouchOccupancy(stack) / MAX_STORAGE, 13);
     }
-    private static int getBundleOccupancy(ItemStack stack) {
+
+    @Override
+    public int getItemBarColor(ItemStack stack) {
+        return MathHelper.packRgb(0.4F, 0.4F, 1.0F);
+    }
+
+    @Override
+    public boolean isItemBarVisible(ItemStack stack) {
+        return true;
+    }
+
+    private static int getSeedPouchOccupancy(ItemStack stack) {
         return getBundledStacks(stack).mapToInt(itemStack -> getItemOccupancy(itemStack) * itemStack.getCount()).sum();
     }
     private static Stream<ItemStack> getBundledStacks(ItemStack stack) {
@@ -389,10 +429,10 @@ public class SeedPouchItem extends Item {
         Stream<ItemStack> stacks = getBundledStacks(stack);
         Objects.requireNonNull(defaultedList);
         stacks.forEach(defaultedList::add);
-        return Optional.of(new BundleTooltipData(defaultedList, getBundleOccupancy(stack)));
+        return Optional.of(new BundleTooltipData(defaultedList, getSeedPouchOccupancy(stack)));
     }
     @Override
     public void appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
-        tooltip.add(Text.translatable("item.minecraft.bundle.fullness", new Object[]{getBundleOccupancy(stack), MAX_STORAGE}).formatted(Formatting.GRAY));
+        tooltip.add(Text.translatable("item.minecraft.bundle.fullness", new Object[]{getSeedPouchOccupancy(stack), MAX_STORAGE}).formatted(Formatting.GRAY));
     }
 }
