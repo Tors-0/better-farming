@@ -280,6 +280,13 @@ public class SeedPouchItem extends Item {
             } else {
                 NbtCompound nbtCompound2 = nbtList.getCompound(0);
                 ItemStack itemStack = ItemStack.fromNbt(nbtCompound2);
+                if (itemStack.getCount() > 64) {
+                    ItemStack outputStack = new ItemStack(itemStack.getItem(),64);
+                    itemStack.decrement(64);
+                    nbtList.remove(0);
+                    addToBundle(stack,itemStack);
+                    return Optional.of(outputStack);
+                }
                 nbtList.remove(0);
                 if (nbtList.isEmpty()) {
                     stack.removeSubNbt("Items");
@@ -316,30 +323,45 @@ public class SeedPouchItem extends Item {
                 nbtCompound.put("Items", new NbtList());
             }
 
-            int i = getSeedPouchOccupancy(bundle);
-            int j = getItemOccupancy(stack);
-            int k = Math.min(stack.getCount(), (MAX_STORAGE - i) / j);
-            if (k == 0) {
+            int seedPouchOccupancy = getSeedPouchOccupancy(bundle);
+            int slotsPerItem = getItemOccupancy(stack);
+            int itemsToAdd = Math.min(stack.getCount(), (MAX_STORAGE - seedPouchOccupancy) / slotsPerItem);
+            if (itemsToAdd == 0) {
                 return 0;
             } else {
                 NbtList nbtList = nbtCompound.getList("Items", NbtElement.COMPOUND_TYPE);
                 Optional<NbtCompound> optional = canMergeStack(stack, nbtList);
                 if (optional.isPresent()) {
-                    NbtCompound nbtCompound2 = (NbtCompound)optional.get();
+                    NbtCompound nbtCompound2 = optional.get();
                     ItemStack itemStack = ItemStack.fromNbt(nbtCompound2);
-                    itemStack.increment(k);
-                    itemStack.writeNbt(nbtCompound2);
-                    nbtList.remove(nbtCompound2);
-                    nbtList.add(0, nbtCompound2);
+                    if (itemStack.getCount() + stack.getCount() > 127) {
+                        int totalItemCount = itemStack.getCount() + stack.getCount();
+
+                        itemStack.setCount(127);
+                        totalItemCount -= 127;
+                        itemStack.writeNbt(nbtCompound2);
+                        nbtList.remove(nbtCompound2);
+                        nbtList.add(0, nbtCompound2);
+
+                        ItemStack leftovers = new ItemStack(stack.getItem(),totalItemCount);
+                        NbtCompound nbtCompound3 = new NbtCompound();
+                        leftovers.writeNbt(nbtCompound3);
+                        nbtList.add(0,nbtCompound3);
+                    } else {
+                        itemStack.increment(itemsToAdd);
+                        itemStack.writeNbt(nbtCompound2);
+                        nbtList.remove(nbtCompound2);
+                        nbtList.add(0, nbtCompound2);
+                    }
                 } else {
                     ItemStack itemStack2 = stack.copy();
-                    itemStack2.setCount(k);
+                    itemStack2.setCount(itemsToAdd);
                     NbtCompound nbtCompound3 = new NbtCompound();
                     itemStack2.writeNbt(nbtCompound3);
                     nbtList.add(0, nbtCompound3);
                 }
 
-                return k;
+                return itemsToAdd;
             }
         } else {
             return 0;
@@ -349,12 +371,10 @@ public class SeedPouchItem extends Item {
         return (float) getSeedPouchOccupancy(stack) / (float) MAX_STORAGE;
     }
     private static Optional<NbtCompound> canMergeStack(ItemStack stack, NbtList items) {
-        return stack.isOf(Items.BUNDLE)
-                ? Optional.empty()
-                : items.stream()
+        return items.stream()
                 .filter(NbtCompound.class::isInstance)
                 .map(NbtCompound.class::cast)
-                .filter(nbt -> ItemStack.canCombine(ItemStack.fromNbt(nbt), stack) && ItemStack.fromNbt(nbt).getCount() + stack.getCount() <= 64)
+                .filter(nbt -> ItemStack.canCombine(ItemStack.fromNbt(nbt), stack)/* && ItemStack.fromNbt(nbt).getCount() + stack.getCount() <= 190*/)
                 .findFirst();
     }
     @Override
@@ -399,7 +419,7 @@ public class SeedPouchItem extends Item {
     }
     @Override
     public int getItemBarStep(ItemStack stack) {
-        return Math.min(13 * getSeedPouchOccupancy(stack) / MAX_STORAGE, 13);
+        return Math.min(1 + 12 * getSeedPouchOccupancy(stack) / MAX_STORAGE, 13);
     }
 
     @Override
@@ -409,7 +429,7 @@ public class SeedPouchItem extends Item {
 
     @Override
     public boolean isItemBarVisible(ItemStack stack) {
-        return true;
+        return stack.getOrCreateNbt().contains("Items");
     }
 
     private static int getSeedPouchOccupancy(ItemStack stack) {

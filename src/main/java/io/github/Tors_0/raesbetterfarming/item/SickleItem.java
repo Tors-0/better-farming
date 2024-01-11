@@ -276,6 +276,11 @@ public class SickleItem extends SwordItem implements Vanishable {
         return true;
     }
 
+    @Override
+    public boolean canMine(BlockState state, World world, BlockPos pos, PlayerEntity miner) {
+        return true;
+    }
+
     public boolean postMine(ItemStack stack, World world, BlockState state, BlockPos pos, LivingEntity miner) {
         if (!world.isClient && state.getHardness(world, pos) != 0.0F) {
             stack.damage(1, miner, (e) -> {

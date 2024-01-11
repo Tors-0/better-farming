@@ -45,7 +45,7 @@ public class SeedPouchItemRenderer implements DynamicItemRenderer {
 
         if (mode == ModelTransformation.Mode.GUI) {
             MatrixStack matrices2 = new MatrixStack();
-            matrices2.translate(0,1/16f,0);
+            matrices2.translate(0,0,0);
             SeedPouchItem.getAmmoForPreview(stack)
                     .ifPresent(ammo -> {
                         itemRenderer.renderItem(hasItems ? POUCH_CLOSED_STACK : POUCH_OPEN_STACK,
