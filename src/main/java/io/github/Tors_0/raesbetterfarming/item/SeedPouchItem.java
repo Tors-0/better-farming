@@ -36,13 +36,15 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.Nullable;
+import org.quiltmc.loader.api.minecraft.ClientOnly;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
+
+import static io.github.Tors_0.raesbetterfarming.RaesBetterFarming.LOGGER;
 
 public class SeedPouchItem extends Item {
     public static final int MAX_STORAGE = 384;
@@ -296,6 +298,23 @@ public class SeedPouchItem extends Item {
             }
         }
     }
+
+    @Override
+    public boolean isNbtSynced() {
+        return true;
+    }
+
+    @Override
+    public boolean hasGlint(ItemStack stack) {
+        NbtCompound nbtCompound = stack.getOrCreateNbt();
+        if (!nbtCompound.contains("Enabled")) {
+            nbtCompound.putBoolean("Enabled", true);
+            return true;
+        } else {
+            return nbtCompound.getBoolean("Enabled");
+        }
+    }
+
     private static Optional<ItemStack> removeLastStack(ItemStack stack) {
         NbtCompound nbtCompound = stack.getOrCreateNbt();
         if (!nbtCompound.contains("Items")) {
@@ -407,10 +426,24 @@ public class SeedPouchItem extends Item {
                 .filter(nbt -> ItemStack.canCombine(ItemStack.fromNbt(nbt), stack)/* && ItemStack.fromNbt(nbt).getCount() + stack.getCount() <= 190*/)
                 .findFirst();
     }
+    @ClientOnly
+    private void playDing(PlayerEntity user) {
+        user.playSound(SoundEvents.ENTITY_ARROW_HIT_PLAYER, 0.8F, 0.8F);
+    }
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         ItemStack itemStack = user.getStackInHand(hand);
         if (user.isSneaking()) {
+            if (!user.isOnGround()) {
+                NbtCompound nbtCompound = itemStack.getOrCreateNbt();
+                if (!nbtCompound.contains("Enabled")) {
+                    nbtCompound.putBoolean("Enabled", true);
+                } else {
+                    nbtCompound.putBoolean("Enabled",!nbtCompound.getBoolean("Enabled"));
+                }
+                playDing(user);
+                return TypedActionResult.pass(itemStack);
+            }
             Optional<ItemStack> lastStack = removeLastStack(itemStack);
             if (lastStack.isPresent()) {
                 addToBundle(itemStack,lastStack.get());
@@ -484,5 +517,6 @@ public class SeedPouchItem extends Item {
     @Override
     public void appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
         tooltip.add(Text.translatable("item.minecraft.bundle.fullness", new Object[]{getSeedPouchOccupancy(stack), MAX_STORAGE}).formatted(Formatting.GRAY));
+        tooltip.add(Text.translatable("tooltip.raesbetterfarming.seed_pouch").append(hasGlint(stack) ? Text.translatable("gui.yes") : Text.translatable("gui.no")));
     }
 }

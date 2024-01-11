@@ -18,8 +18,10 @@ import org.quiltmc.loader.api.minecraft.ClientOnly;
 
 public class SeedPouchItemRenderer implements DynamicItemRenderer {
 
-    private static ItemStack POUCH_OPEN_STACK = new ItemStack(ModItems.DUMMY_SEED_POUCH_EMPTY);
-    private static ItemStack POUCH_CLOSED_STACK = new ItemStack(ModItems.DUMMY_SEED_POUCH_FULL);
+    private static final ItemStack POUCH_OPEN_STACK = new ItemStack(ModItems.DUMMY_SEED_POUCH_EMPTY);
+    private static final ItemStack POUCH_CLOSED_STACK = new ItemStack(ModItems.DUMMY_SEED_POUCH_FULL);
+    private static final ItemStack ENABLED = new ItemStack(Items.GREEN_WOOL);
+    private static final ItemStack DISABLED = new ItemStack(Items.RED_WOOL);
 
     public SeedPouchItemRenderer() {}
 
@@ -40,7 +42,6 @@ public class SeedPouchItemRenderer implements DynamicItemRenderer {
             VertexConsumerProvider vertexConsumers, int light, int overlay
     ) {
         ItemRenderer itemRenderer = MinecraftClient.getInstance().getItemRenderer();
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
         boolean hasItems = SeedPouchItem.getAmountFilled(stack) > 0;
 
         if (mode == ModelTransformation.Mode.GUI) {
@@ -58,6 +59,11 @@ public class SeedPouchItemRenderer implements DynamicItemRenderer {
                         itemRenderer.renderItem(ammo, ModelTransformation.Mode.NONE, light,
                                 OverlayTexture.DEFAULT_UV, matrices, vertexConsumers, 0);
                     });
+//            MatrixStack matrices3 = new MatrixStack();
+//            matrices3.translate(-1/4f,-1/4f, 1);
+//            matrices3.scale(.5f,.5f,.5f);
+//            itemRenderer.renderItem(stack.getItem().hasGlint(stack) ? ENABLED : DISABLED, mode, light, overlay, matrices3, vertexConsumers, 0);
+
         } else {
             matrices.translate(.5f,.5f,.5f);
 

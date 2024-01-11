@@ -57,7 +57,6 @@ public class SickleItem extends SwordItem implements Vanishable {
     protected final float miningSpeed;
     private final float attackDamage;
     private final Multimap<EntityAttribute, EntityAttributeModifier> attributeModifiers;
-    protected static final Map<Block, Pair<Predicate<ItemUsageContext>, Consumer<ItemUsageContext>>> TILLING_ACTIONS;
 
     public SickleItem(float toolBaseDamage, float attackSpeed, ToolMaterial material, Item.Settings settings) {
         super(material, (int) toolBaseDamage, attackSpeed, settings);
@@ -69,71 +68,20 @@ public class SickleItem extends SwordItem implements Vanishable {
         builder.put(EntityAttributes.GENERIC_ATTACK_SPEED, new EntityAttributeModifier(ATTACK_SPEED_MODIFIER_ID, "Tool modifier", (double)attackSpeed, Operation.ADDITION));
         this.attributeModifiers = builder.build();
     }
-// add a tooltip saying "innate sweeping damage" or smth
     public ActionResult useOnBlock(ItemUsageContext context) {
-        World world = context.getWorld();
         BlockPos blockPos = context.getBlockPos();
-        Pair<Predicate<ItemUsageContext>, Consumer<ItemUsageContext>> pair = TILLING_ACTIONS.get(world.getBlockState(blockPos).getBlock());
-        if (pair == null) {
-            ActionResult[] letsHarvest = new ActionResult[]{blockHarvest(context, blockPos),
-            blockHarvest(context, blockPos.north()),
-            blockHarvest(context, blockPos.east()),
-            blockHarvest(context, blockPos.south()),
-            blockHarvest(context, blockPos.west())};
-            for (ActionResult aR : letsHarvest) {
-                if (aR == ActionResult.SUCCESS) {
-                    return aR;
-                }
-            }
-            return ActionResult.PASS;
-        } else {
-            Predicate<ItemUsageContext> predicate = pair.getFirst();
-            Consumer<ItemUsageContext> consumer = pair.getSecond();
-            // tills blocks in a plus shape (same as harvesting)
-            tillBlock(new ItemUsageContext(context.getPlayer(),context.getHand(),new BlockHitResult(context.getHitPos(),context.getSide(),blockPos.north(),context.hitsInsideBlock())));
-            tillBlock(new ItemUsageContext(context.getPlayer(),context.getHand(),new BlockHitResult(context.getHitPos(),context.getSide(),blockPos.east(),context.hitsInsideBlock())));
-            tillBlock(new ItemUsageContext(context.getPlayer(),context.getHand(),new BlockHitResult(context.getHitPos(),context.getSide(),blockPos.south(),context.hitsInsideBlock())));
-            tillBlock(new ItemUsageContext(context.getPlayer(),context.getHand(),new BlockHitResult(context.getHitPos(),context.getSide(),blockPos.west(),context.hitsInsideBlock())));
-            if (predicate.test(context)) {
-                PlayerEntity playerEntity = context.getPlayer();
-                world.playSound(playerEntity, blockPos, SoundEvents.ITEM_HOE_TILL, SoundCategory.BLOCKS, 1.0F, 1.0F);
-                if (!world.isClient) {
-                    consumer.accept(context);
-                    if (playerEntity != null) {
-                        context.getStack().damage(1, playerEntity, (p) -> {
-                            p.sendToolBreakStatus(context.getHand());
-                        });
-                    }
-                }
 
-                return ActionResult.success(world.isClient);
-            } else {
-                return ActionResult.PASS;
+        ActionResult[] letsHarvest = new ActionResult[]{blockHarvest(context, blockPos),
+                blockHarvest(context, blockPos.north()),
+                blockHarvest(context, blockPos.east()),
+                blockHarvest(context, blockPos.south()),
+                blockHarvest(context, blockPos.west())};
+        for (ActionResult aR : letsHarvest) {
+            if (aR == ActionResult.SUCCESS) {
+                return aR;
             }
         }
-    }
-    public void tillBlock(ItemUsageContext context) {
-        World world = context.getWorld();
-        BlockPos blockPos = context.getBlockPos();
-        Pair<Predicate<ItemUsageContext>, Consumer<ItemUsageContext>> pair = TILLING_ACTIONS.get(world.getBlockState(blockPos).getBlock());
-        if (pair == null) {
-            return;
-        } else {
-            Predicate<ItemUsageContext> predicate = pair.getFirst();
-            Consumer<ItemUsageContext> consumer = pair.getSecond();
-            if (predicate.test(context)) {
-                PlayerEntity playerEntity = context.getPlayer();
-                world.playSound(playerEntity, blockPos, SoundEvents.ITEM_HOE_TILL, SoundCategory.BLOCKS, 1.0F, 1.0F);
-                if (!world.isClient) {
-                    consumer.accept(context);
-                    if (playerEntity != null) {
-                        context.getStack().damage(1, playerEntity, (p) -> {
-                            p.sendToolBreakStatus(context.getHand());
-                        });
-                    }
-                }
-            }
-        }
+        return ActionResult.PASS;
     }
     public ActionResult blockHarvest(ItemUsageContext context, BlockPos blockPos) {
         World world = context.getWorld();
@@ -247,27 +195,6 @@ public class SickleItem extends SwordItem implements Vanishable {
             }
         }
         return null;
-    }
-
-    public static Consumer<ItemUsageContext> createTillAction(BlockState result) {
-        return (context) -> {
-            context.getWorld().setBlockState(context.getBlockPos(), result, 11);
-            context.getWorld().emitGameEvent(GameEvent.BLOCK_CHANGE, context.getBlockPos(), GameEvent.Context.create(context.getPlayer(), result));
-        };
-    }
-
-    public static Consumer<ItemUsageContext> createTillAndDropAction(BlockState result, ItemConvertible droppedItem) {
-        return (context) -> {
-            context.getWorld().setBlockState(context.getBlockPos(), result, 11);
-            context.getWorld().emitGameEvent(GameEvent.BLOCK_CHANGE, context.getBlockPos(), GameEvent.Context.create(context.getPlayer(), result));
-            Block.dropStack(context.getWorld(), context.getBlockPos(), context.getSide(), new ItemStack(droppedItem));
-        };
-    }
-
-    static {
-        TILLING_ACTIONS = Maps.newHashMap(ImmutableMap.of(Blocks.GRASS_BLOCK, Pair.of(HoeItem::canTillFarmland, createTillAction(Blocks.FARMLAND.getDefaultState())), Blocks.DIRT_PATH, Pair.of(HoeItem::canTillFarmland, createTillAction(Blocks.FARMLAND.getDefaultState())), Blocks.DIRT, Pair.of(HoeItem::canTillFarmland, createTillAction(Blocks.FARMLAND.getDefaultState())), Blocks.COARSE_DIRT, Pair.of(HoeItem::canTillFarmland, createTillAction(Blocks.DIRT.getDefaultState())), Blocks.ROOTED_DIRT, Pair.of((itemUsageContext) -> {
-            return true;
-        }, createTillAndDropAction(Blocks.DIRT.getDefaultState(), Items.HANGING_ROOTS))));
     }
 
     public float getMiningSpeedMultiplier(ItemStack stack, BlockState state) {

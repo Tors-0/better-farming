@@ -5,6 +5,7 @@ import io.github.Tors_0.raesbetterfarming.item.SeedPouchItem;
 import io.github.Tors_0.raesbetterfarming.registry.ModTags;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.collection.DefaultedList;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -31,6 +32,12 @@ public abstract class PlayerInventoryMixin implements PlayerInventoryExtension {
     public void raes_farming$hijackSeedItemsToPouch(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
         if (stack.isIn(ModTags.Items.SEEDS)) {
             if (this.raes_farming$indexOf() != -1) {
+                NbtCompound nbtCompound = this.getStack(this.raes_farming$indexOf()).getOrCreateNbt();
+                if (nbtCompound.contains("Enabled")) {
+                    if (!nbtCompound.getBoolean("Enabled")) {
+                        return;
+                    }
+                }
                 int itemsAdded = SeedPouchItem.addStackToBundle(
                         this.getStack(this.raes_farming$indexOf()),
                         stack
