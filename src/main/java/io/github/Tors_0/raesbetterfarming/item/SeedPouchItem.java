@@ -399,7 +399,7 @@ public class SeedPouchItem extends Item {
     }
     @Override
     public int getItemBarStep(ItemStack stack) {
-        return Math.min(1 + 12 * getSeedPouchOccupancy(stack) / MAX_STORAGE, 13);
+        return Math.min(13 * getSeedPouchOccupancy(stack) / MAX_STORAGE, 13);
     }
 
     @Override
