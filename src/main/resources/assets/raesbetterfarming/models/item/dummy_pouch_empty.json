@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "raesbetterfarming:item/dummy_pouch_empty"
+    "layer0": "item/bundle"
   }
 }
