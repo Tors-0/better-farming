@@ -1,5 +1,6 @@
 package io.github.Tors_0.raesbetterfarming.item;
 
+import io.github.Tors_0.raesbetterfarming.command.CustomTitleCommand;
 import io.github.Tors_0.raesbetterfarming.registry.ModTags;
 import net.minecraft.advancement.criterion.Criteria;
 import net.minecraft.block.Block;
@@ -18,6 +19,7 @@ import net.minecraft.item.*;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.network.packet.s2c.play.OverlayMessageS2CPacket;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -36,15 +38,9 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.Nullable;
-import org.quiltmc.loader.api.minecraft.ClientOnly;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
-
-import static io.github.Tors_0.raesbetterfarming.RaesBetterFarming.LOGGER;
 
 public class SeedPouchItem extends Item {
     public static final int MAX_STORAGE = 384;
@@ -68,22 +64,21 @@ public class SeedPouchItem extends Item {
         if (!context.canPlace()) {
             return ActionResult.FAIL;
         } else {
-            ItemPlacementContext itemPlacementContext = this.getPlacementContext(context);
-            if (itemPlacementContext == null) {
+            if (context == null) {
                 return ActionResult.FAIL;
             } else {
-                BlockState blockState = this.getPlacementState(itemPlacementContext);
-                ItemStack itemStack = itemPlacementContext.getStack();
+                BlockState blockState = this.getPlacementState(context);
+                ItemStack itemStack = context.getStack();
                 if (blockState == null) {
                     return ActionResult.FAIL;
-                } else if (!this.place(itemPlacementContext, blockState)) {
+                } else if (!this.place(context, blockState)) {
                     return ActionResult.FAIL;
                 } else if (getSeedPouchOccupancy(itemStack) < 1) {
                     return ActionResult.FAIL;
                 } else {
-                    BlockPos blockPos = itemPlacementContext.getBlockPos();
-                    World world = itemPlacementContext.getWorld();
-                    PlayerEntity playerEntity = itemPlacementContext.getPlayer();
+                    BlockPos blockPos = context.getBlockPos();
+                    World world = context.getWorld();
+                    PlayerEntity playerEntity = context.getPlayer();
                     BlockState blockState2 = world.getBlockState(blockPos);
                     if (blockState2.isOf(blockState.getBlock())) {
                         blockState2 = this.placeFromTag(blockPos, world, itemStack, blockState2);
@@ -123,11 +118,6 @@ public class SeedPouchItem extends Item {
     }
     protected SoundEvent getPlaceSound(BlockState state) {
         return state.getSoundGroup().getPlaceSound();
-    }
-
-    @Nullable
-    public ItemPlacementContext getPlacementContext(ItemPlacementContext context) {
-        return context;
     }
 
     protected boolean postPlacement(BlockPos pos, World world, @Nullable PlayerEntity player, ItemStack stack, BlockState state) {
@@ -426,9 +416,17 @@ public class SeedPouchItem extends Item {
                 .filter(nbt -> ItemStack.canCombine(ItemStack.fromNbt(nbt), stack)/* && ItemStack.fromNbt(nbt).getCount() + stack.getCount() <= 190*/)
                 .findFirst();
     }
-    @ClientOnly
-    private void playDing(PlayerEntity user) {
-        user.playSound(SoundEvents.ENTITY_ARROW_HIT_PLAYER, 0.8F, 0.8F);
+    private void popupMessage(PlayerEntity user, World world, boolean newState) {
+        if (world.isClient) return;
+        CustomTitleCommand.executeTitle(
+                user.getCommandSource(),
+                (ServerPlayerEntity) user,
+                Text.translatable("tooltip.raesbetterfarming.seed_pouch").append(
+                        newState ? Text.translatable("gui.yes") : Text.translatable("gui.no")
+                ),
+                "actionbar",
+                OverlayMessageS2CPacket::new
+        );
     }
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
@@ -440,9 +438,9 @@ public class SeedPouchItem extends Item {
                     nbtCompound.putBoolean("Enabled", true);
                 } else {
                     nbtCompound.putBoolean("Enabled",!nbtCompound.getBoolean("Enabled"));
+                    popupMessage(user,world,nbtCompound.getBoolean("Enabled"));
                 }
-                playDing(user);
-                return TypedActionResult.pass(itemStack);
+                return TypedActionResult.success(itemStack,world.isClient);
             }
             Optional<ItemStack> lastStack = removeLastStack(itemStack);
             if (lastStack.isPresent()) {
