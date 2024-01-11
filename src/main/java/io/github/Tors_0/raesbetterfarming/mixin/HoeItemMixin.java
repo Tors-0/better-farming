@@ -1,10 +1,9 @@
 package io.github.Tors_0.raesbetterfarming.mixin;
 
+import io.github.Tors_0.raesbetterfarming.extensions.PlayerInventoryExtension;
+import io.github.Tors_0.raesbetterfarming.item.SeedPouchItem;
 import net.minecraft.block.*;
-import net.minecraft.item.HoeItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsageContext;
-import net.minecraft.item.Items;
+import net.minecraft.item.*;
 import net.minecraft.loot.context.LootContext;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.network.PacketByteBuf;
@@ -48,8 +47,10 @@ public class HoeItemMixin {
                         playerEntity.dropStack(i);
                     }
                 }
-                BlockPos finalPos1 = pos;
-                if (1 == playerEntity.getInventory().remove(itemStack -> itemStack.isOf((crop.getPickStack(world, finalPos1, world.getBlockState(finalPos1))).getItem()), 1, playerEntity.getInventory())) {
+                ItemStack pickStack = (crop.getPickStack(world, pos, world.getBlockState(pos)));
+                if (1 == playerEntity.getInventory().remove(itemStack -> itemStack.isOf(pickStack.getItem()), 1, playerEntity.getInventory())
+                        || SeedPouchItem.removeOne(playerEntity.getInventory().getStack(((PlayerInventoryExtension)playerEntity.getInventory()).raes_farming$indexOf()),pickStack)
+                ) {
                     world.setBlockState(pos, crop.getDefaultState());
                 } else {
                     world.setBlockState(pos, Blocks.AIR.getDefaultState());

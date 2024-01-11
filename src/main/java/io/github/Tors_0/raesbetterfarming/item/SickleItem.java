@@ -10,14 +10,15 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.mojang.datafixers.util.Pair;
+import io.github.Tors_0.raesbetterfarming.extensions.PlayerInventoryExtension;
 import net.minecraft.block.*;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.attribute.EntityAttributeModifier.Operation;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
 import net.minecraft.loot.context.LootContext;
@@ -44,7 +45,6 @@ import org.quiltmc.qsl.networking.api.PacketByteBufs;
 import org.quiltmc.qsl.networking.api.PlayerLookup;
 import org.quiltmc.qsl.networking.api.ServerPlayNetworking;
 
-import java.awt.*;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -73,20 +73,22 @@ public class SickleItem extends SwordItem implements Vanishable {
     public ActionResult useOnBlock(ItemUsageContext context) {
         World world = context.getWorld();
         BlockPos blockPos = context.getBlockPos();
-        Pair<Predicate<ItemUsageContext>, Consumer<ItemUsageContext>> pair = (Pair) TILLING_ACTIONS.get(world.getBlockState(blockPos).getBlock());
+        Pair<Predicate<ItemUsageContext>, Consumer<ItemUsageContext>> pair = TILLING_ACTIONS.get(world.getBlockState(blockPos).getBlock());
         if (pair == null) {
-            ActionResult letsHarvest = blockHarvest(context, blockPos);
-            blockHarvest(context, blockPos.north());
-            blockHarvest(context, blockPos.east());
-            blockHarvest(context, blockPos.south());
-            blockHarvest(context, blockPos.west());
-            if (letsHarvest != null) {
-                return letsHarvest;
+            ActionResult[] letsHarvest = new ActionResult[]{blockHarvest(context, blockPos),
+            blockHarvest(context, blockPos.north()),
+            blockHarvest(context, blockPos.east()),
+            blockHarvest(context, blockPos.south()),
+            blockHarvest(context, blockPos.west())};
+            for (ActionResult aR : letsHarvest) {
+                if (aR == ActionResult.SUCCESS) {
+                    return aR;
+                }
             }
             return ActionResult.PASS;
         } else {
-            Predicate<ItemUsageContext> predicate = (Predicate) pair.getFirst();
-            Consumer<ItemUsageContext> consumer = (Consumer) pair.getSecond();
+            Predicate<ItemUsageContext> predicate = pair.getFirst();
+            Consumer<ItemUsageContext> consumer = pair.getSecond();
             // tills blocks in a plus shape (same as harvesting)
             tillBlock(new ItemUsageContext(context.getPlayer(),context.getHand(),new BlockHitResult(context.getHitPos(),context.getSide(),blockPos.north(),context.hitsInsideBlock())));
             tillBlock(new ItemUsageContext(context.getPlayer(),context.getHand(),new BlockHitResult(context.getHitPos(),context.getSide(),blockPos.east(),context.hitsInsideBlock())));
@@ -113,12 +115,12 @@ public class SickleItem extends SwordItem implements Vanishable {
     public void tillBlock(ItemUsageContext context) {
         World world = context.getWorld();
         BlockPos blockPos = context.getBlockPos();
-        Pair<Predicate<ItemUsageContext>, Consumer<ItemUsageContext>> pair = (Pair) TILLING_ACTIONS.get(world.getBlockState(blockPos).getBlock());
+        Pair<Predicate<ItemUsageContext>, Consumer<ItemUsageContext>> pair = TILLING_ACTIONS.get(world.getBlockState(blockPos).getBlock());
         if (pair == null) {
             return;
         } else {
-            Predicate<ItemUsageContext> predicate = (Predicate) pair.getFirst();
-            Consumer<ItemUsageContext> consumer = (Consumer) pair.getSecond();
+            Predicate<ItemUsageContext> predicate = pair.getFirst();
+            Consumer<ItemUsageContext> consumer = pair.getSecond();
             if (predicate.test(context)) {
                 PlayerEntity playerEntity = context.getPlayer();
                 world.playSound(playerEntity, blockPos, SoundEvents.ITEM_HOE_TILL, SoundCategory.BLOCKS, 1.0F, 1.0F);
@@ -151,7 +153,10 @@ public class SickleItem extends SwordItem implements Vanishable {
                     }
                 }
                 BlockPos finalPos1 = blockPos;
-                if (1 == playerEntity.getInventory().remove(itemStack -> itemStack.isOf((crop.getPickStack(world, finalPos1, world.getBlockState(finalPos1))).getItem()), 1, playerEntity.getInventory())) {
+                ItemStack pickStack = (crop.getPickStack(world, finalPos1, world.getBlockState(finalPos1)));
+                if (1 == playerEntity.getInventory().remove(itemStack -> itemStack.isOf(pickStack.getItem()), 1, playerEntity.getInventory())
+                        || SeedPouchItem.removeOne(playerEntity.getInventory().getStack(((PlayerInventoryExtension)playerEntity.getInventory()).raes_farming$indexOf()),pickStack)
+                ) {
                     world.setBlockState(blockPos, crop.getDefaultState());
                 } else {
                     world.setBlockState(blockPos, Blocks.AIR.getDefaultState());

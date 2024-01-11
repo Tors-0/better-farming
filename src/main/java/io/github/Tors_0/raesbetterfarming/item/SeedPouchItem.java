@@ -316,6 +316,36 @@ public class SeedPouchItem extends Item {
             }
         }
     }
+    public static boolean removeOne(ItemStack bundle, ItemStack stack) {
+        NbtCompound nbtCompound = bundle.getOrCreateNbt();
+        if (!nbtCompound.contains("Items")) {
+            return false;
+        } else {
+            NbtList nbtList = nbtCompound.getList("Items", NbtElement.COMPOUND_TYPE);
+            if (nbtList.isEmpty()) {
+                return false;
+            } else {
+                Optional<NbtCompound> nbtCompound1 = nbtList.stream()
+                        .filter(NbtCompound.class::isInstance)
+                        .map(NbtCompound.class::cast)
+                        .filter(nbt -> ItemStack.fromNbt(nbt).getItem().equals(stack.getItem()))
+                        .findFirst();
+                if (nbtCompound1.isPresent()) {
+                    ItemStack stack1 = ItemStack.fromNbt(nbtCompound1.get());
+                    stack1.decrement(1);
+                    stack1.writeNbt(nbtCompound1.get());
+                    nbtList.remove(nbtCompound1.get());
+                    nbtList.add(0,nbtCompound1.get());
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+    }
+    public static int addStackToBundle(ItemStack bundle, ItemStack stack) {
+        return addToBundle(bundle,stack);
+    }
     private static int addToBundle(ItemStack bundle, ItemStack stack) {
         if (!stack.isEmpty() && stack.getItem().canBeNested() && stack.isIn(ModTags.Items.SEEDS)) {
             NbtCompound nbtCompound = bundle.getOrCreateNbt();
