@@ -62,7 +62,7 @@ public abstract class PlayerInventoryMixin implements PlayerInventoryExtension {
                 if (!withSpace) {
                     return i;
                 } else {
-                    if (SeedPouchItem.getAmountFilled(this.main.get(i)) < 1f && SeedPouchItem.isEnabled(this.main.get(i))) {
+                    if (SeedPouchItem.isEnabled(this.main.get(i)) && SeedPouchItem.getAmountFilled(this.main.get(i)) < 1f) {
                         return i;
                     }
                 }

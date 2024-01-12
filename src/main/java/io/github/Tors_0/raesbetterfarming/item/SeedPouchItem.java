@@ -420,13 +420,12 @@ public class SeedPouchItem extends Item {
                 .filter(NbtCompound.class::isInstance)
                 .map(NbtCompound.class::cast)
                 .filter(nbt -> ItemStack.canCombine(ItemStack.fromNbt(nbt), stack)
-                        && ItemStack.fromNbt(nbt).getCount() < BUNDLE_MAX_STACK_SIZE
-                        && stack.getCount() < BUNDLE_MAX_STACK_SIZE)
+                        && ItemStack.fromNbt(nbt).getCount() < BUNDLE_MAX_STACK_SIZE)
                 .findFirst();
     }
     private void popupMessage(PlayerEntity user, World world, boolean newState) {
         if (world.isClient) {
-            user.playSound(SoundEvents.BLOCK_NOTE_BLOCK_CHIME,SoundCategory.PLAYERS,1f,1f);
+            user.playSound(SoundEvents.BLOCK_NOTE_BLOCK_CHIME,SoundCategory.PLAYERS,1f,.6f + (float) (Math.random() * .8));
             return;
         }
         CustomTitleCommand.executeTitle(
@@ -439,6 +438,17 @@ public class SeedPouchItem extends Item {
                 OverlayMessageS2CPacket::new
         );
     }
+
+    @Override
+    public Text getName(ItemStack stack) {
+        Optional<ItemStack> contained = getAmmoForPreview(stack);
+        if (contained.isPresent() && !contained.get().getItem().equals(Items.AIR)) {
+            return Text.translatable(this.getTranslationKey(stack)).append(" (").append(Text.translatable(contained.get().getTranslationKey())).append(")");
+        } else {
+            return super.getName(stack);
+        }
+    }
+
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         ItemStack itemStack = user.getStackInHand(hand);
