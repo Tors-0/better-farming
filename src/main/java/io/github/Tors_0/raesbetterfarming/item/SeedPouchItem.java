@@ -44,6 +44,7 @@ import java.util.stream.Stream;
 
 public class SeedPouchItem extends Item {
     public static final int MAX_STORAGE = 384;
+    public static final int BUNDLE_MAX_STACK_SIZE = 64;
     public SeedPouchItem(Settings settings) {
         super(settings);
     }
@@ -294,8 +295,7 @@ public class SeedPouchItem extends Item {
         return true;
     }
 
-    @Override
-    public boolean hasGlint(ItemStack stack) {
+    public static boolean isEnabled(ItemStack stack) {
         NbtCompound nbtCompound = stack.getOrCreateNbt();
         if (!nbtCompound.contains("Enabled")) {
             nbtCompound.putBoolean("Enabled", true);
@@ -368,24 +368,26 @@ public class SeedPouchItem extends Item {
             if (itemsToAdd == 0) {
                 return 0;
             } else {
+                int leftovers = 0;
                 NbtList nbtList = nbtCompound.getList("Items", NbtElement.COMPOUND_TYPE);
                 Optional<NbtCompound> optional = canMergeStack(stack, nbtList);
                 if (optional.isPresent()) {
                     NbtCompound nbtCompound2 = optional.get();
                     ItemStack itemStack = ItemStack.fromNbt(nbtCompound2);
-                    if (itemStack.getCount() + stack.getCount() > 127) {
+                    if (itemStack.getCount() + stack.getCount() > BUNDLE_MAX_STACK_SIZE) {
                         int totalItemCount = itemStack.getCount() + stack.getCount();
-
-                        itemStack.setCount(127);
-                        totalItemCount -= 127;
-                        itemStack.writeNbt(nbtCompound2);
                         nbtList.remove(nbtCompound2);
-                        nbtList.add(0, nbtCompound2);
+                        while (MAX_STORAGE - getItemOccupancy(bundle) >= totalItemCount && totalItemCount > 0) {
+                            int currNum = Math.min(BUNDLE_MAX_STACK_SIZE,totalItemCount);
+                            itemStack.setCount(currNum);
+                            NbtCompound nbtTemp = new NbtCompound();
+                            itemStack.writeNbt(nbtTemp);
+                            nbtList.add(0,nbtTemp);
+                            totalItemCount -= currNum;
+                        }
 
-                        ItemStack leftovers = new ItemStack(stack.getItem(),totalItemCount);
-                        NbtCompound nbtCompound3 = new NbtCompound();
-                        leftovers.writeNbt(nbtCompound3);
-                        nbtList.add(0,nbtCompound3);
+                        leftovers = totalItemCount;
+
                     } else {
                         itemStack.increment(itemsToAdd);
                         itemStack.writeNbt(nbtCompound2);
@@ -399,8 +401,12 @@ public class SeedPouchItem extends Item {
                     itemStack2.writeNbt(nbtCompound3);
                     nbtList.add(0, nbtCompound3);
                 }
-
-                return itemsToAdd;
+                for (int i = nbtList.size()-1; i >= 0; i--) {
+                    if (ItemStack.fromNbt(nbtList.getCompound(i)).getItem().equals(Items.AIR)) {
+                        nbtList.remove(i);
+                    }
+                }
+                return itemsToAdd - leftovers;
             }
         } else {
             return 0;
@@ -413,11 +419,16 @@ public class SeedPouchItem extends Item {
         return items.stream()
                 .filter(NbtCompound.class::isInstance)
                 .map(NbtCompound.class::cast)
-                .filter(nbt -> ItemStack.canCombine(ItemStack.fromNbt(nbt), stack)/* && ItemStack.fromNbt(nbt).getCount() + stack.getCount() <= 190*/)
+                .filter(nbt -> ItemStack.canCombine(ItemStack.fromNbt(nbt), stack)
+                        && ItemStack.fromNbt(nbt).getCount() < BUNDLE_MAX_STACK_SIZE
+                        && stack.getCount() < BUNDLE_MAX_STACK_SIZE)
                 .findFirst();
     }
     private void popupMessage(PlayerEntity user, World world, boolean newState) {
-        if (world.isClient) return;
+        if (world.isClient) {
+            user.playSound(SoundEvents.BLOCK_NOTE_BLOCK_CHIME,SoundCategory.PLAYERS,1f,1f);
+            return;
+        }
         CustomTitleCommand.executeTitle(
                 user.getCommandSource(),
                 (ServerPlayerEntity) user,
@@ -515,6 +526,6 @@ public class SeedPouchItem extends Item {
     @Override
     public void appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
         tooltip.add(Text.translatable("item.minecraft.bundle.fullness", new Object[]{getSeedPouchOccupancy(stack), MAX_STORAGE}).formatted(Formatting.GRAY));
-        tooltip.add(Text.translatable("tooltip.raesbetterfarming.seed_pouch").append(hasGlint(stack) ? Text.translatable("gui.yes") : Text.translatable("gui.no")));
+        tooltip.add(Text.translatable("tooltip.raesbetterfarming.seed_pouch").append(isEnabled(stack) ? Text.translatable("gui.yes") : Text.translatable("gui.no")));
     }
 }

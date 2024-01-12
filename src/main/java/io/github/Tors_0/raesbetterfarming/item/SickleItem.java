@@ -103,7 +103,7 @@ public class SickleItem extends SwordItem implements Vanishable {
                 BlockPos finalPos1 = blockPos;
                 ItemStack pickStack = (crop.getPickStack(world, finalPos1, world.getBlockState(finalPos1)));
                 if (1 == playerEntity.getInventory().remove(itemStack -> itemStack.isOf(pickStack.getItem()), 1, playerEntity.getInventory())
-                        || SeedPouchItem.removeOne(playerEntity.getInventory().getStack(((PlayerInventoryExtension)playerEntity.getInventory()).raes_farming$indexOf()),pickStack)
+                        || SeedPouchItem.removeOne(playerEntity.getInventory().getStack(((PlayerInventoryExtension)playerEntity.getInventory()).raes_farming$indexOf(false)),pickStack)
                 ) {
                     world.setBlockState(blockPos, crop.getDefaultState());
                 } else {

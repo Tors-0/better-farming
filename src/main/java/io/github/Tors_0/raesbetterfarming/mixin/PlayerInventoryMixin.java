@@ -31,15 +31,15 @@ public abstract class PlayerInventoryMixin implements PlayerInventoryExtension {
     @Inject(method = "insertStack(Lnet/minecraft/item/ItemStack;)Z", at = @At(value = "HEAD"), cancellable = true)
     public void raes_farming$hijackSeedItemsToPouch(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
         if (stack.isIn(ModTags.Items.SEEDS)) {
-            if (this.raes_farming$indexOf() != -1) {
-                NbtCompound nbtCompound = this.getStack(this.raes_farming$indexOf()).getOrCreateNbt();
+            if (this.raes_farming$indexOf(true) != -1) {
+                NbtCompound nbtCompound = this.getStack(this.raes_farming$indexOf(true)).getOrCreateNbt();
                 if (nbtCompound.contains("Enabled")) {
                     if (!nbtCompound.getBoolean("Enabled")) {
                         return;
                     }
                 }
                 int itemsAdded = SeedPouchItem.addStackToBundle(
-                        this.getStack(this.raes_farming$indexOf()),
+                        this.getStack(this.raes_farming$indexOf(true)),
                         stack
                 );
                 if (itemsAdded >= stack.getCount()) {
@@ -56,10 +56,16 @@ public abstract class PlayerInventoryMixin implements PlayerInventoryExtension {
 
     @Unique
     @Override
-    public int raes_farming$indexOf() {
+    public int raes_farming$indexOf(boolean withSpace) {
         for (int i = 0; i < this.main.size(); i++) {
             if (this.main.get(i).getItem() instanceof SeedPouchItem) {
-                return i;
+                if (!withSpace) {
+                    return i;
+                } else {
+                    if (SeedPouchItem.getAmountFilled(this.main.get(i)) < 1f && SeedPouchItem.isEnabled(this.main.get(i))) {
+                        return i;
+                    }
+                }
             }
         }
         return -1;

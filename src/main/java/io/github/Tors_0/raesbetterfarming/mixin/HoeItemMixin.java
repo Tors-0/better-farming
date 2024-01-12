@@ -49,7 +49,7 @@ public class HoeItemMixin {
                 }
                 ItemStack pickStack = (crop.getPickStack(world, pos, world.getBlockState(pos)));
                 if (1 == playerEntity.getInventory().remove(itemStack -> itemStack.isOf(pickStack.getItem()), 1, playerEntity.getInventory())
-                        || SeedPouchItem.removeOne(playerEntity.getInventory().getStack(((PlayerInventoryExtension)playerEntity.getInventory()).raes_farming$indexOf()),pickStack)
+                        || SeedPouchItem.removeOne(playerEntity.getInventory().getStack(((PlayerInventoryExtension)playerEntity.getInventory()).raes_farming$indexOf(false)),pickStack)
                 ) {
                     world.setBlockState(pos, crop.getDefaultState());
                 } else {
