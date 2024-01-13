@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "#X#",
+    "XSX",
+    "XXX"
+  ],
+  "key": {
+    "X": {
+      "item": "minecraft:leather"
+    },
+    "#": {
+      "item": "minecraft:string"
+    },
+    "S": {
+      "tag": "c:seeds"
+    }
+  },
+  "result": {
+    "item": "raesbetterfarming:seed_pouch"
+  }
+}
